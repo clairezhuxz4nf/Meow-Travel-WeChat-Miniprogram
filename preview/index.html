@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>喵游 · 小程序预览</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="preview-shell">
+      <aside class="preview-note">
+        <div class="brand-mark">喵游</div>
+        <h1>交互预览</h1>
+        <p>这里用于快速确认视觉与信息结构。正式能力仍在微信开发者工具中验证。</p>
+        <div class="preview-hints">
+          <span>可点击底部三个 Tab</span>
+          <span>可切换今日日期</span>
+          <span>可新增一笔花费</span>
+        </div>
+      </aside>
+
+      <section class="phone" aria-label="喵游小程序预览">
+        <div class="status-bar">
+          <span>9:41</span>
+          <span>●●●  Wi-Fi  ▰</span>
+        </div>
+        <div class="mini-header">
+          <span class="mini-brand">喵游</span>
+          <span class="wechat-capsule">•••　◉</span>
+        </div>
+
+        <div id="app" class="screen-stack">
+          <section class="screen is-active" data-screen="today">
+            <header class="page-header">
+              <div>
+                <span class="eyebrow">旅程第 1 天 · 巴黎</span>
+                <h2>今日</h2>
+                <p id="dateLabel">5月2日 周日</p>
+              </div>
+              <label class="date-control">
+                <span>▦</span>
+                <span>换日期</span>
+                <input id="datePicker" type="date" min="2027-05-02" max="2027-05-18" value="2027-05-02" />
+              </label>
+            </header>
+
+            <div class="weather-strip">
+              <span>⛅ 多云 18° / 11°</span>
+              <span>4 个地点 · 2 项已预订</span>
+            </div>
+
+            <article class="next-card card">
+              <div>
+                <span class="next-kicker">NEXT · 09:00</span>
+                <h3>卢浮宫</h3>
+                <p>步行 12 分钟 · 0.9 km</p>
+                <div class="tag-row"><span class="tag">景点</span><span class="tag success">已购票</span></div>
+              </div>
+              <div class="cat-stamp" aria-label="猫咪旅行搭子">
+                <div class="cat-ear left"></div><div class="cat-ear right"></div>
+                <div class="cat-face"><i></i><i></i><b>⌣</b></div>
+                <div class="cat-scarf"></div>
+              </div>
+            </article>
+
+            <section class="section-block">
+              <div class="section-title"><h3>全天安排</h3><button>调整顺序</button></div>
+              <div class="timeline" id="timeline"></div>
+            </section>
+
+            <section class="section-block">
+              <div class="section-title"><h3>今日路线</h3><button>查看城市地图</button></div>
+              <article class="map-card card">
+                <div class="mock-map">
+                  <span class="river"></span>
+                  <span class="map-road r1"></span><span class="map-road r2"></span><span class="map-road r3"></span>
+                  <button class="pin p1">1</button><button class="pin p2">2</button><button class="pin p3">3</button>
+                  <svg class="route" viewBox="0 0 320 180" preserveAspectRatio="none" aria-hidden="true">
+                    <path d="M76 64 C130 24, 165 145, 250 82" />
+                  </svg>
+                </div>
+                <div class="map-footer"><div><strong>巴黎 · 4 个地点</strong><span>点击 Pin 查看地点详情</span></div><b>›</b></div>
+              </article>
+            </section>
+          </section>
+
+          <section class="screen" data-screen="trips">
+            <header class="page-header compact"><div><h2>行程</h2><p>管理整段旅程与每一个城市</p></div><span class="cat-mini">🐱</span></header>
+            <article class="trip-hero card">
+              <span class="eyebrow sage">进行中 · 17 天</span>
+              <h3>春日六城</h3>
+              <p>和朋友一起慢慢走</p>
+              <div class="route-line"><i class="active"></i><em></em><i></i><em></em><i></i><em></em><i></i><em></em><i></i><em></em><i></i></div>
+              <div class="route-labels"><span>巴黎</span><span>布鲁塞尔</span><span>阿姆斯特丹</span><span>柏林</span><span>布拉格</span><span>维也纳</span></div>
+              <div class="trip-stats"><div><b>6</b><span>城市</span></div><div><b>3</b><span>同行人</span></div><div><b>€3,860</b><span>已花费</span></div></div>
+            </article>
+
+            <div class="quick-links">
+              <button class="quick card"><span class="quick-icon ochre">▰</span><span><b>旅行票夹</b><small>酒店、交通、门票</small></span><em>›</em></button>
+              <button class="quick card" data-go="expenses"><span class="quick-icon green">€</span><span><b>团体花费</b><small>预算已使用 74%</small></span><em>›</em></button>
+            </div>
+
+            <section class="section-block">
+              <div class="section-title"><h3>城市站点</h3><button>5.02 — 5.18</button></div>
+              <div id="cityList" class="city-list"></div>
+            </section>
+          </section>
+
+          <section class="screen" data-screen="expenses">
+            <header class="page-header compact"><div><h2>花费</h2><p>春日六城 · 3 位同行人</p></div><span class="cat-mini">😺</span></header>
+            <article class="total-card card">
+              <span>团队总花费</span>
+              <h3>€<b id="expenseTotal">3,860</b></h3>
+              <div class="budget"><i id="budgetFill"></i></div>
+              <small id="budgetText">预算已使用 74%</small>
+              <button id="addExpenseButton" class="primary">＋ 记一笔</button>
+            </article>
+
+            <section class="section-block">
+              <div class="section-title"><h3>成员结算</h3><button>查看方案</button></div>
+              <div class="member-grid">
+                <article class="member card"><i>C</i><b>Claire</b><span class="receive">应收 €120</span></article>
+                <article class="member card"><i>M</i><b>Mia</b><span>应付 €60</span></article>
+                <article class="member card"><i>L</i><b>Leo</b><span>应付 €60</span></article>
+              </div>
+            </section>
+
+            <section class="section-block">
+              <div class="section-title"><h3>花在哪里</h3><button>€3,860</button></div>
+              <article class="spend-card card">
+                <div class="donut"><div><b>74%</b><span>预算</span></div></div>
+                <ul><li><i class="blue"></i>住宿 <b>35%</b><span>€1,350</span></li><li><i class="green"></i>交通 <b>25%</b><span>€965</span></li><li><i class="yellow"></i>门票 <b>20%</b><span>€772</span></li><li><i class="rose"></i>吃喝 <b>15%</b><span>€579</span></li></ul>
+              </article>
+            </section>
+
+            <section class="section-block">
+              <div class="section-title"><h3>最近记录</h3><button>全部</button></div>
+              <div id="expenseList" class="expense-list card"></div>
+            </section>
+          </section>
+        </div>
+
+        <nav class="tab-bar" aria-label="主导航">
+          <button class="tab is-active" data-tab="today"><b>●</b><span>今日</span></button>
+          <button class="tab" data-tab="trips"><b>⌁</b><span>行程</span></button>
+          <button class="tab" data-tab="expenses"><b>¥</b><span>花费</span></button>
+        </nav>
+      </section>
+    </main>
+
+    <div id="expenseModal" class="modal" aria-hidden="true">
+      <form id="expenseForm" class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-heading"><div><h2>记一笔</h2><p>自动计入团队总花费</p></div><button type="button" id="closeModal">×</button></div>
+        <label>名称<input name="title" required placeholder="例如：咖啡馆午餐" /></label>
+        <label>金额<div class="money-input"><span>€</span><input name="amount" type="number" min="0.01" step="0.01" required placeholder="0.00" /></div></label>
+        <label>分类<select name="category"><option>吃喝</option><option>交通</option><option>住宿</option><option>门票</option><option>购物</option><option>其他</option></select></label>
+        <button class="primary" type="submit">保存记录</button>
+      </form>
+    </div>
+
+    <div id="toast" class="toast">已更新预览</div>
+    <script src="./app.js"></script>
+  </body>
+</html>
+
