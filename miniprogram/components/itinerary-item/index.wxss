@@ -1,0 +1,141 @@
+.timeline-row {
+  align-items: stretch;
+  display: flex;
+  min-height: 172rpx;
+}
+
+.time-column {
+  box-sizing: border-box;
+  padding-top: 22rpx;
+  width: 96rpx;
+}
+
+.time {
+  color: #2E3130;
+  display: block;
+  font-size: 28rpx;
+  font-weight: 650;
+}
+
+.end-time {
+  color: #92948F;
+  display: block;
+  font-size: 21rpx;
+  margin-top: 4rpx;
+}
+
+.rail {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  width: 34rpx;
+}
+
+.dot {
+  background: #FFFCF7;
+  border: 4rpx solid #A9BCC8;
+  border-radius: 50%;
+  box-sizing: border-box;
+  height: 20rpx;
+  margin-top: 32rpx;
+  width: 20rpx;
+  z-index: 1;
+}
+
+.dot--next {
+  background: #D96A60;
+  border-color: #D96A60;
+  box-shadow: 0 0 0 8rpx rgba(217, 106, 96, 0.12);
+}
+
+.line {
+  background: #CFD5D6;
+  flex: 1;
+  width: 2rpx;
+}
+
+.item-card {
+  background: #FFFCF7;
+  border: 2rpx solid #DED9D0;
+  border-radius: 24rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  margin-bottom: 20rpx;
+  min-width: 0;
+  padding: 20rpx;
+}
+
+.item-card--next {
+  border-color: #D6A6A0;
+  box-shadow: 0 10rpx 28rpx rgba(96, 69, 62, 0.08);
+}
+
+.item-icon {
+  align-items: center;
+  border-radius: 18rpx;
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 34rpx;
+  height: 76rpx;
+  justify-content: center;
+  width: 76rpx;
+}
+
+.item-main {
+  flex: 1;
+  margin-left: 20rpx;
+  min-width: 0;
+}
+
+.item-top {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.item-title {
+  font-size: 30rpx;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  color: #8D8F8B;
+  font-size: 42rpx;
+  line-height: 1;
+}
+
+.meta-row {
+  align-items: center;
+  display: flex;
+  margin-top: 10rpx;
+}
+
+.category,
+.status {
+  border-radius: 999rpx;
+  font-size: 21rpx;
+  padding: 5rpx 12rpx;
+}
+
+.category {
+  background: #EFEAE2;
+  color: #5F625E;
+}
+
+.status {
+  background: #E6EEE3;
+  color: #537258;
+  margin-left: 10rpx;
+}
+
+.transport {
+  color: #686A67;
+  display: block;
+  font-size: 23rpx;
+  margin-top: 12rpx;
+}
+

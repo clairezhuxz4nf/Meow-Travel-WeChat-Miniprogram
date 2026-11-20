@@ -1,0 +1,41 @@
+{
+  "pages": [
+    "pages/today/index",
+    "pages/trips/index",
+    "pages/city/index",
+    "pages/place/index",
+    "pages/tickets/index",
+    "pages/expenses/index"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#F7F4EE",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "喵游",
+    "backgroundColor": "#F7F4EE",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#686A67",
+    "selectedColor": "#2E3130",
+    "backgroundColor": "#FFFCF7",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/today/index",
+        "text": "今日"
+      },
+      {
+        "pagePath": "pages/trips/index",
+        "text": "行程"
+      },
+      {
+        "pagePath": "pages/expenses/index",
+        "text": "花费"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}
+

@@ -1,0 +1,210 @@
+.today-page {
+  padding-top: 24rpx;
+}
+
+.page-header {
+  align-items: flex-end;
+  display: flex;
+  justify-content: space-between;
+}
+
+.eyebrow {
+  color: #8A6B36;
+  font-size: 23rpx;
+  font-weight: 650;
+  letter-spacing: 2rpx;
+}
+
+.date-switch {
+  align-items: center;
+  background: #FFFCF7;
+  border: 2rpx solid #D8D3CB;
+  border-radius: 999rpx;
+  display: flex;
+  font-size: 24rpx;
+  height: 64rpx;
+  padding: 0 22rpx;
+}
+
+.calendar-icon {
+  font-size: 30rpx;
+  margin-right: 10rpx;
+}
+
+.weather-strip {
+  align-items: center;
+  background: rgba(255, 252, 247, 0.7);
+  border-bottom: 2rpx solid #E2DDD5;
+  border-top: 2rpx solid #E2DDD5;
+  display: flex;
+  font-size: 24rpx;
+  justify-content: space-between;
+  margin: 30rpx -32rpx 0;
+  padding: 20rpx 32rpx;
+}
+
+.weather-main {
+  align-items: center;
+  display: flex;
+}
+
+.weather-icon {
+  font-size: 34rpx;
+  margin-right: 10rpx;
+}
+
+.next-card {
+  background: linear-gradient(135deg, #F4E9E4 0%, #FFFCF7 62%);
+  display: flex;
+  justify-content: space-between;
+  margin-top: 28rpx;
+  min-height: 260rpx;
+  overflow: hidden;
+  padding: 30rpx;
+  position: relative;
+}
+
+.next-copy {
+  position: relative;
+  z-index: 2;
+}
+
+.next-label {
+  color: #A85549;
+  font-size: 22rpx;
+  font-weight: 700;
+  letter-spacing: 2rpx;
+}
+
+.next-title {
+  font-size: 42rpx;
+  font-weight: 700;
+  margin-top: 14rpx;
+}
+
+.next-meta {
+  color: #686A67;
+  font-size: 24rpx;
+  margin-top: 10rpx;
+}
+
+.next-badges {
+  display: flex;
+  margin-top: 24rpx;
+}
+
+.next-badges .pill + .pill {
+  margin-left: 12rpx;
+}
+
+.next-visual {
+  align-items: flex-end;
+  display: flex;
+  justify-content: flex-end;
+  min-width: 150rpx;
+  position: relative;
+}
+
+.sun-doodle {
+  color: #C9A65B;
+  font-size: 52rpx;
+  position: absolute;
+  right: 5rpx;
+  top: 0;
+}
+
+.empty-card {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  margin-top: 28rpx;
+  padding: 44rpx 28rpx;
+  text-align: center;
+}
+
+.empty-title {
+  font-size: 32rpx;
+  font-weight: 650;
+  margin: 12rpx 0;
+}
+
+.map-card {
+  overflow: hidden;
+}
+
+.route-map {
+  display: block;
+  height: 360rpx;
+  width: 100%;
+}
+
+.map-footer {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  padding: 22rpx 24rpx;
+}
+
+.map-title {
+  font-size: 28rpx;
+  font-weight: 650;
+}
+
+.map-copy {
+  color: #686A67;
+  font-size: 22rpx;
+  margin-top: 4rpx;
+}
+
+.map-arrow {
+  align-items: center;
+  background: #EFF2F1;
+  border-radius: 50%;
+  display: flex;
+  font-size: 42rpx;
+  height: 64rpx;
+  justify-content: center;
+  width: 64rpx;
+}
+
+.quick-grid {
+  display: flex;
+  justify-content: space-between;
+}
+
+.quick-card {
+  box-sizing: border-box;
+  padding: 26rpx;
+  width: calc(50% - 10rpx);
+}
+
+.quick-icon {
+  align-items: center;
+  border-radius: 18rpx;
+  display: flex;
+  font-size: 32rpx;
+  height: 68rpx;
+  justify-content: center;
+  width: 68rpx;
+}
+
+.quick-icon--ticket {
+  background: #F4E7C7;
+}
+
+.quick-icon--expense {
+  background: #E2EBE0;
+}
+
+.quick-title {
+  font-size: 29rpx;
+  font-weight: 650;
+  margin-top: 20rpx;
+}
+
+.quick-copy {
+  color: #686A67;
+  font-size: 23rpx;
+  margin-top: 6rpx;
+}
+

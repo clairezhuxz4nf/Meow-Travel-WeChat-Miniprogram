@@ -1,0 +1,130 @@
+.ticket-page {
+  padding-top: 24rpx;
+}
+
+.category-scroll {
+  margin: 30rpx -32rpx 0;
+  white-space: nowrap;
+}
+
+.category-row {
+  display: inline-flex;
+  padding: 0 32rpx 8rpx;
+}
+
+.category-chip {
+  background: #FFFCF7;
+  border: 2rpx solid #D8D3CB;
+  border-radius: 999rpx;
+  color: #5F625E;
+  font-size: 25rpx;
+  margin-right: 12rpx;
+  padding: 14rpx 28rpx;
+}
+
+.category-chip--active {
+  background: #2E3130;
+  border-color: #2E3130;
+  color: #FFFCF7;
+}
+
+.ticket-list {
+  margin-top: 24rpx;
+}
+
+.ticket-card {
+  border: 2rpx solid #CFC9BF;
+  border-radius: 24rpx;
+  box-sizing: border-box;
+  margin-bottom: 20rpx;
+  min-height: 270rpx;
+  overflow: hidden;
+  padding: 28rpx;
+  position: relative;
+}
+
+.ticket-card--blue {
+  background: #E8EFF2;
+}
+
+.ticket-card--green {
+  background: #E7EEE5;
+}
+
+.ticket-card--yellow {
+  background: #F4ECD6;
+}
+
+.ticket-card--rose {
+  background: #F1E5E2;
+}
+
+.ticket-notch {
+  background: #F7F4EE;
+  border: 2rpx solid #CFC9BF;
+  border-radius: 50%;
+  height: 34rpx;
+  position: absolute;
+  top: 162rpx;
+  width: 34rpx;
+}
+
+.ticket-notch--left {
+  left: -19rpx;
+}
+
+.ticket-notch--right {
+  right: -19rpx;
+}
+
+.ticket-category {
+  color: #666965;
+  font-size: 22rpx;
+  font-weight: 650;
+  letter-spacing: 2rpx;
+}
+
+.ticket-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  margin-top: 12rpx;
+}
+
+.ticket-subtitle {
+  color: #5F625E;
+  font-size: 25rpx;
+  margin-top: 7rpx;
+}
+
+.ticket-bottom {
+  align-items: flex-end;
+  border-top: 2rpx dashed rgba(46, 49, 48, 0.23);
+  display: flex;
+  justify-content: space-between;
+  margin-top: 28rpx;
+  padding-top: 22rpx;
+}
+
+.ticket-date {
+  font-size: 25rpx;
+  font-weight: 620;
+}
+
+.ticket-status {
+  color: #56735B;
+  font-size: 22rpx;
+  margin-top: 6rpx;
+}
+
+.qr-box {
+  align-items: center;
+  background: rgba(255, 252, 247, 0.7);
+  border: 2rpx solid rgba(46, 49, 48, 0.25);
+  border-radius: 14rpx;
+  display: flex;
+  font-size: 42rpx;
+  height: 76rpx;
+  justify-content: center;
+  width: 76rpx;
+}
+

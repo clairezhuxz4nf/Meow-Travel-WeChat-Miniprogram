@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "城市行程",
+  "usingComponents": {
+    "itinerary-item": "/components/itinerary-item/index"
+  }
+}
+

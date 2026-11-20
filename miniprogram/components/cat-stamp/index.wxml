@@ -1,0 +1,12 @@
+<view class="cat cat--{{size}}" aria-label="喵游旅行搭子">
+  <view class="ear ear--left"></view>
+  <view class="ear ear--right"></view>
+  <view class="face">
+    <view class="eye eye--left"></view>
+    <view class="eye eye--right"></view>
+    <view class="nose"></view>
+    <view class="mouth">{{mood === 'happy' ? '⌣' : '·'}}</view>
+  </view>
+  <view class="scarf"></view>
+</view>
+

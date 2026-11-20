@@ -1,0 +1,108 @@
+<view class="page today-page">
+  <view class="page-header">
+    <view>
+      <text class="eyebrow">{{progressText}} · {{city.name}}</text>
+      <view class="page-title">今日</view>
+      <view class="page-subtitle">{{dateLabel}}</view>
+    </view>
+    <picker
+      mode="date"
+      value="{{selectedDate}}"
+      start="{{trip.startDate}}"
+      end="{{trip.endDate}}"
+      bindchange="handleDateChange"
+    >
+      <view class="date-switch pressable" aria-label="切换日期">
+        <text class="calendar-icon">▦</text>
+        <text>换日期</text>
+      </view>
+    </picker>
+  </view>
+
+  <view class="weather-strip">
+    <view class="weather-main">
+      <text class="weather-icon">{{plan.weather.icon}}</text>
+      <text>{{plan.weather.text}} {{plan.weather.temperature}}</text>
+    </view>
+    <text class="muted">{{plan.summary}}</text>
+  </view>
+
+  <view wx:if="{{hasPlan}}" class="next-card card pressable" bindtap="openNext">
+    <view class="next-copy">
+      <view class="next-label">NEXT · {{nextItem.time}}</view>
+      <view class="next-title">{{nextItem.title}}</view>
+      <view class="next-meta">{{nextItem.transport}}</view>
+      <view class="next-badges">
+        <text class="pill">{{nextItem.category}}</text>
+        <text class="pill status-confirmed">{{nextItem.status}}</text>
+      </view>
+    </view>
+    <view class="next-visual">
+      <view class="sun-doodle">✦</view>
+      <cat-stamp mood="happy" size="small" />
+    </view>
+  </view>
+
+  <view wx:else class="empty-card card">
+    <cat-stamp mood="ready" />
+    <view class="empty-title">这一天还没有安排</view>
+    <view class="muted">去“行程”中添加地点，或换一个日期看看。</view>
+  </view>
+
+  <view class="section" wx:if="{{hasPlan}}">
+    <view class="section-heading">
+      <view class="section-title">全天安排</view>
+      <view class="section-action" bindtap="openCity">调整顺序</view>
+    </view>
+    <view class="timeline">
+      <itinerary-item
+        wx:for="{{plan.items}}"
+        wx:key="id"
+        item="{{item}}"
+        last="{{index === plan.items.length - 1}}"
+        bind:select="handleItinerarySelect"
+      />
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-heading">
+      <view class="section-title">今日路线</view>
+      <view class="section-action" bindtap="openCity">查看城市地图</view>
+    </view>
+    <view class="map-card card">
+      <map
+        class="route-map"
+        latitude="{{city.latitude}}"
+        longitude="{{city.longitude}}"
+        scale="12"
+        markers="{{markers}}"
+        polyline="{{polyline}}"
+        bindmarkertap="handleMarkerTap"
+        enable-rotate="false"
+        enable-overlooking="false"
+      />
+      <view class="map-footer">
+        <view>
+          <view class="map-title">{{city.name}} · {{plan.items.length}} 个地点</view>
+          <view class="map-copy">点击 Pin 查看地点详情</view>
+        </view>
+        <view class="map-arrow" bindtap="openCity">›</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="quick-grid section">
+    <view class="quick-card card pressable" bindtap="openTickets">
+      <view class="quick-icon quick-icon--ticket">▰</view>
+      <view class="quick-title">旅行票夹</view>
+      <view class="quick-copy">4 张已确认</view>
+    </view>
+    <view class="quick-card card pressable" bindtap="openExpenses">
+      <view class="quick-icon quick-icon--expense">€</view>
+      <view class="quick-title">今日花费</view>
+      <view class="quick-copy">已记 €60.60</view>
+    </view>
+  </view>
+</view>
+

@@ -1,0 +1,96 @@
+<view class="place-page">
+  <view class="photo-hero">
+    <view class="photo-sky"></view>
+    <view class="photo-building">
+      <view class="roof"></view>
+      <view class="building-body">
+        <view wx:for="{{buildingWindows}}" wx:key="*this" class="window"></view>
+      </view>
+    </view>
+    <view class="glass-pyramid">◇</view>
+    <view class="photo-label">地点实拍图</view>
+  </view>
+
+  <view class="place-content">
+    <view class="place-heading">
+      <view>
+        <view class="place-kicker">{{place.cityName}} · {{place.category}}</view>
+        <view class="place-title">{{place.name}}</view>
+      </view>
+      <cat-stamp mood="happy" size="small" />
+    </view>
+
+    <view class="status-row">
+      <text class="pill">{{place.category}}</text>
+      <text class="pill status-confirmed">{{place.booking}}</text>
+    </view>
+
+    <view class="info-card card">
+      <view class="info-row">
+        <view class="info-icon">⌖</view>
+        <view>
+          <view class="info-label">地址</view>
+          <view class="info-value">{{place.address}}</view>
+        </view>
+      </view>
+      <view class="info-row">
+        <view class="info-icon">◷</view>
+        <view>
+          <view class="info-label">开放时间</view>
+          <view class="info-value">{{place.opening}}</view>
+        </view>
+      </view>
+    </view>
+
+    <view class="booking-card card" bindtap="showTicket">
+      <view class="ticket-icon">▰</view>
+      <view class="booking-main">
+        <view class="booking-label">预订状态</view>
+        <view class="booking-value">{{place.booking}} · 5月2日 09:00</view>
+      </view>
+      <view class="qr-mini">▦</view>
+      <text class="chevron">›</text>
+    </view>
+
+    <view class="section">
+      <view class="section-heading">
+        <view class="section-title">大家的笔记</view>
+        <view class="section-action">3 条</view>
+      </view>
+      <view class="note-card card">
+        <view class="note-quote">“三大镇馆之宝一定要看，入口处先拿楼层地图。”</view>
+        <view class="note-author">Claire · 昨天</view>
+      </view>
+    </view>
+
+    <view class="section">
+      <view class="section-heading">
+        <view class="section-title">打卡清单</view>
+        <view class="section-action">{{checklist.length}} 项</view>
+      </view>
+      <view class="check-card card">
+        <view
+          wx:for="{{checklist}}"
+          wx:key="id"
+          class="check-row"
+          data-id="{{item.id}}"
+          bindtap="toggleCheck"
+        >
+          <view class="checkbox {{item.done ? 'checkbox--done' : ''}}">{{item.done ? '✓' : ''}}</view>
+          <text class="check-text {{item.done ? 'check-text--done' : ''}}">{{item.text}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="mini-map-card card">
+      <map class="mini-map" latitude="{{place.latitude}}" longitude="{{place.longitude}}" scale="14" />
+      <view class="mini-map-copy">在地图中查看位置</view>
+    </view>
+
+    <view class="action-row">
+      <button class="secondary-button action-button" bindtap="addToItinerary">加入行程</button>
+      <button class="primary-button action-button" bindtap="showTicket">查看票券</button>
+    </view>
+  </view>
+</view>
+

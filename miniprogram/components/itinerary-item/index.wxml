@@ -1,0 +1,25 @@
+<view class="timeline-row" bindtap="handleTap" aria-role="button">
+  <view class="time-column">
+    <text class="time">{{item.time}}</text>
+    <text class="end-time">{{item.endTime}}</text>
+  </view>
+  <view class="rail">
+    <view class="dot {{item.isNext ? 'dot--next' : ''}}"></view>
+    <view wx:if="{{!last}}" class="line"></view>
+  </view>
+  <view class="item-card {{item.isNext ? 'item-card--next' : ''}}">
+    <view class="item-icon" style="background: {{item.accent}}33;">{{item.icon}}</view>
+    <view class="item-main">
+      <view class="item-top">
+        <text class="item-title">{{item.title}}</text>
+        <text class="chevron">›</text>
+      </view>
+      <view class="meta-row">
+        <text class="category">{{item.category}}</text>
+        <text class="status">{{item.status}}</text>
+      </view>
+      <text class="transport">{{item.transport}}</text>
+    </view>
+  </view>
+</view>
+

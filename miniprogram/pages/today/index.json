@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "今日",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "itinerary-item": "/components/itinerary-item/index",
+    "cat-stamp": "/components/cat-stamp/index"
+  }
+}
+

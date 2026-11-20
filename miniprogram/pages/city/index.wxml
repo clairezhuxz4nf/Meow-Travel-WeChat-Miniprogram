@@ -1,0 +1,66 @@
+<view class="city-page">
+  <view class="map-shell">
+    <map
+      class="city-map"
+      latitude="{{city.latitude}}"
+      longitude="{{city.longitude}}"
+      scale="12"
+      markers="{{markers}}"
+      polyline="{{polyline}}"
+      bindmarkertap="handleMarkerTap"
+    />
+    <scroll-view class="filter-scroll" scroll-x enhanced show-scrollbar="false">
+      <view class="filter-row">
+        <view
+          wx:for="{{categories}}"
+          wx:key="*this"
+          class="filter-chip {{activeCategory === item ? 'filter-chip--active' : ''}}"
+          data-category="{{item}}"
+          bindtap="handleCategory"
+        >{{item}}</view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="content-sheet">
+    <view class="sheet-handle"></view>
+    <view class="city-heading">
+      <view>
+        <view class="city-title">{{city.name}} · {{city.dates}}</view>
+        <view class="city-copy">{{city.note}}</view>
+      </view>
+      <view class="city-days">{{city.nights + 1}} 天</view>
+    </view>
+
+    <view wx:if="{{filteredPlaces.length}}" class="place-strip">
+      <view
+        wx:for="{{filteredPlaces}}"
+        wx:key="id"
+        class="place-card"
+        data-id="{{item.id}}"
+        bindtap="openPlace"
+      >
+        <view class="place-visual">{{index + 1}}</view>
+        <view class="place-name">{{item.name}}</view>
+        <view class="place-meta">{{item.category}} · {{item.booking}}</view>
+      </view>
+    </view>
+    <view wx:else class="empty-places">这个分类还没有地点</view>
+
+    <view class="section-heading itinerary-heading">
+      <view class="section-title">城市安排</view>
+      <view class="section-action">智能排序</view>
+    </view>
+    <view wx:if="{{itinerary.length}}">
+      <itinerary-item
+        wx:for="{{itinerary}}"
+        wx:key="id"
+        item="{{item}}"
+        last="{{index === itinerary.length - 1}}"
+        bind:select="handleItinerarySelect"
+      />
+    </view>
+    <view wx:else class="empty-itinerary card">这个城市还没有安排，添加收藏地点后即可开始规划。</view>
+  </view>
+</view>
+

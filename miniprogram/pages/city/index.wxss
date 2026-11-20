@@ -1,0 +1,141 @@
+.city-page {
+  background: #F7F4EE;
+  min-height: 100vh;
+}
+
+.map-shell {
+  height: 620rpx;
+  position: relative;
+}
+
+.city-map {
+  height: 100%;
+  width: 100%;
+}
+
+.filter-scroll {
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 24rpx;
+  white-space: nowrap;
+}
+
+.filter-row {
+  display: inline-flex;
+  padding: 0 24rpx;
+}
+
+.filter-chip {
+  background: rgba(255, 252, 247, 0.94);
+  border: 2rpx solid #D8D3CB;
+  border-radius: 999rpx;
+  color: #555854;
+  font-size: 24rpx;
+  margin-right: 12rpx;
+  padding: 15rpx 24rpx;
+}
+
+.filter-chip--active {
+  background: #2E3130;
+  border-color: #2E3130;
+  color: #FFFCF7;
+}
+
+.content-sheet {
+  background: #F7F4EE;
+  border-radius: 34rpx 34rpx 0 0;
+  margin-top: -34rpx;
+  min-height: 600rpx;
+  padding: 18rpx 32rpx 80rpx;
+  position: relative;
+  z-index: 2;
+}
+
+.sheet-handle {
+  background: #C9C4BC;
+  border-radius: 999rpx;
+  height: 8rpx;
+  margin: 0 auto 26rpx;
+  width: 72rpx;
+}
+
+.city-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.city-title {
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.city-copy {
+  color: #686A67;
+  font-size: 24rpx;
+  margin-top: 6rpx;
+}
+
+.city-days {
+  background: #E7ECE9;
+  border-radius: 999rpx;
+  color: #56705B;
+  font-size: 23rpx;
+  padding: 10rpx 18rpx;
+}
+
+.place-strip {
+  display: flex;
+  margin: 28rpx -32rpx 0;
+  overflow-x: auto;
+  padding: 0 32rpx 8rpx;
+}
+
+.place-card {
+  background: #FFFCF7;
+  border: 2rpx solid #DED9D0;
+  border-radius: 24rpx;
+  flex: 0 0 auto;
+  margin-right: 16rpx;
+  padding: 18rpx;
+  width: 236rpx;
+}
+
+.place-visual {
+  align-items: center;
+  background: linear-gradient(140deg, #E3EAE7, #F3E8DF);
+  border-radius: 18rpx;
+  color: #5F625E;
+  display: flex;
+  font-size: 34rpx;
+  font-weight: 700;
+  height: 116rpx;
+  justify-content: center;
+}
+
+.place-name {
+  font-size: 28rpx;
+  font-weight: 650;
+  margin-top: 14rpx;
+}
+
+.place-meta {
+  color: #777975;
+  font-size: 21rpx;
+  margin-top: 5rpx;
+}
+
+.empty-places,
+.empty-itinerary {
+  color: #777975;
+  font-size: 25rpx;
+  margin-top: 28rpx;
+  padding: 34rpx;
+  text-align: center;
+}
+
+.itinerary-heading {
+  margin-top: 40rpx;
+}
+

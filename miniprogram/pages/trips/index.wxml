@@ -1,0 +1,106 @@
+<view class="page trips-page">
+  <view class="page-header">
+    <view>
+      <view class="page-title">行程</view>
+      <view class="page-subtitle">管理整段旅程与每一个城市</view>
+    </view>
+    <cat-stamp mood="ready" size="small" />
+  </view>
+
+  <view class="trip-hero card">
+    <view class="hero-kicker">进行中 · {{trip.days}} 天</view>
+    <view class="hero-title">{{trip.name}}</view>
+    <view class="hero-subtitle">{{trip.subtitle}}</view>
+    <view class="route-line">
+      <view wx:for="{{trip.cities}}" wx:key="id" class="route-stop">
+        <view class="route-dot {{item.status === 'current' ? 'route-dot--current' : ''}}"></view>
+        <view wx:if="{{index < trip.cities.length - 1}}" class="route-segment"></view>
+      </view>
+    </view>
+    <view class="route-names">
+      <text wx:for="{{trip.cities}}" wx:key="id" class="route-name">{{item.name}}</text>
+    </view>
+    <view class="hero-stats">
+      <view class="hero-stat">
+        <text class="stat-value">{{trip.cities.length}}</text>
+        <text class="stat-label">城市</text>
+      </view>
+      <view class="hero-stat">
+        <text class="stat-value">{{trip.companionCount}}</text>
+        <text class="stat-label">同行人</text>
+      </view>
+      <view class="hero-stat">
+        <text class="stat-value">€{{trip.spent}}</text>
+        <text class="stat-label">已花费</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="tool-row section">
+    <view class="tool-card card pressable" bindtap="openTickets">
+      <view class="tool-icon tool-icon--ticket">▰</view>
+      <view>
+        <view class="tool-title">旅行票夹</view>
+        <view class="tool-copy">酒店、交通、门票</view>
+      </view>
+      <text class="tool-arrow">›</text>
+    </view>
+    <view class="tool-card card pressable" bindtap="openExpenses">
+      <view class="tool-icon tool-icon--expense">€</view>
+      <view>
+        <view class="tool-title">团体花费</view>
+        <view class="tool-copy">预算 {{budgetPercent}}%</view>
+      </view>
+      <text class="tool-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-heading">
+      <view class="section-title">城市站点</view>
+      <view class="section-action">{{trip.startDate}} — {{trip.endDate}}</view>
+    </view>
+    <view class="city-list">
+      <view
+        wx:for="{{trip.cities}}"
+        wx:key="id"
+        class="city-card card pressable"
+        data-id="{{item.id}}"
+        bindtap="openCity"
+      >
+        <view class="city-accent" style="background: {{item.accent}};"></view>
+        <view class="city-index">{{index + 1}}</view>
+        <view class="city-main">
+          <view class="city-top">
+            <view>
+              <text class="city-name">{{item.name}}</text>
+              <text class="city-country">{{item.country}}</text>
+            </view>
+            <text wx:if="{{item.status === 'current'}}" class="current-badge">当前</text>
+          </view>
+          <view class="city-dates">{{item.dates}} · {{item.nights}} 晚</view>
+          <view class="city-note">{{item.note}}</view>
+        </view>
+        <text class="city-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-heading">
+      <view class="section-title">跨城交通</view>
+      <view class="section-action">全部</view>
+    </view>
+    <view class="transport-card card">
+      <view wx:for="{{trip.transport}}" wx:key="id" class="transport-row">
+        <view class="transport-icon">↗</view>
+        <view class="transport-main">
+          <view class="transport-route">{{item.from}} → {{item.to}}</view>
+          <view class="transport-meta">{{item.type}} · {{item.date}} {{item.time}}</view>
+        </view>
+        <text class="status-text">{{item.status}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+

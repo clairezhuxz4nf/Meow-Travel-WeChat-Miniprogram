@@ -1,0 +1,286 @@
+.trips-page {
+  padding-top: 24rpx;
+}
+
+.page-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.trip-hero {
+  background: linear-gradient(150deg, #EDF1EF 0%, #FFFCF7 56%, #F4ECE3 100%);
+  margin-top: 30rpx;
+  overflow: hidden;
+  padding: 32rpx;
+}
+
+.hero-kicker {
+  color: #6D8069;
+  font-size: 23rpx;
+  font-weight: 650;
+  letter-spacing: 1rpx;
+}
+
+.hero-title {
+  font-size: 46rpx;
+  font-weight: 700;
+  margin-top: 10rpx;
+}
+
+.hero-subtitle {
+  color: #686A67;
+  font-size: 25rpx;
+  margin-top: 6rpx;
+}
+
+.route-line {
+  display: flex;
+  margin-top: 36rpx;
+  padding: 0 12rpx;
+}
+
+.route-stop {
+  align-items: center;
+  display: flex;
+  flex: 1;
+}
+
+.route-stop:last-child {
+  flex: 0 0 auto;
+}
+
+.route-dot {
+  background: #FFFCF7;
+  border: 4rpx solid #A9B6B2;
+  border-radius: 50%;
+  box-sizing: border-box;
+  height: 20rpx;
+  width: 20rpx;
+}
+
+.route-dot--current {
+  background: #D96A60;
+  border-color: #D96A60;
+  box-shadow: 0 0 0 8rpx rgba(217, 106, 96, 0.13);
+}
+
+.route-segment {
+  border-top: 3rpx dashed #AFB7B4;
+  flex: 1;
+}
+
+.route-names {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16rpx;
+}
+
+.route-name {
+  color: #666965;
+  font-size: 19rpx;
+  text-align: center;
+}
+
+.hero-stats {
+  border-top: 2rpx solid #DED9D0;
+  display: flex;
+  margin-top: 30rpx;
+  padding-top: 26rpx;
+}
+
+.hero-stat {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.stat-label {
+  color: #777975;
+  font-size: 22rpx;
+  margin-top: 4rpx;
+}
+
+.tool-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.tool-card {
+  align-items: center;
+  display: flex;
+  padding: 22rpx 24rpx;
+}
+
+.tool-card + .tool-card {
+  margin-top: 16rpx;
+}
+
+.tool-icon {
+  align-items: center;
+  border-radius: 18rpx;
+  display: flex;
+  font-size: 30rpx;
+  height: 68rpx;
+  justify-content: center;
+  margin-right: 20rpx;
+  width: 68rpx;
+}
+
+.tool-icon--ticket {
+  background: #F2E7C9;
+}
+
+.tool-icon--expense {
+  background: #E1EBE1;
+}
+
+.tool-title {
+  font-size: 29rpx;
+  font-weight: 650;
+}
+
+.tool-copy {
+  color: #777975;
+  font-size: 22rpx;
+  margin-top: 3rpx;
+}
+
+.tool-arrow {
+  color: #8D8F8B;
+  font-size: 42rpx;
+  margin-left: auto;
+}
+
+.city-card {
+  align-items: center;
+  display: flex;
+  margin-bottom: 18rpx;
+  min-height: 168rpx;
+  overflow: hidden;
+  padding: 22rpx 24rpx 22rpx 0;
+  position: relative;
+}
+
+.city-accent {
+  align-self: stretch;
+  border-radius: 0 8rpx 8rpx 0;
+  margin-right: 20rpx;
+  width: 8rpx;
+}
+
+.city-index {
+  align-items: center;
+  background: #F0ECE5;
+  border-radius: 50%;
+  display: flex;
+  flex: 0 0 auto;
+  font-size: 24rpx;
+  font-weight: 650;
+  height: 58rpx;
+  justify-content: center;
+  margin-right: 20rpx;
+  width: 58rpx;
+}
+
+.city-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.city-top {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.city-name {
+  font-size: 32rpx;
+  font-weight: 680;
+}
+
+.city-country {
+  color: #777975;
+  font-size: 22rpx;
+  margin-left: 12rpx;
+}
+
+.current-badge {
+  background: #F3E5E1;
+  border-radius: 999rpx;
+  color: #A85549;
+  font-size: 21rpx;
+  padding: 6rpx 14rpx;
+}
+
+.city-dates {
+  color: #5F625E;
+  font-size: 24rpx;
+  margin-top: 10rpx;
+}
+
+.city-note {
+  color: #8B8D89;
+  font-size: 22rpx;
+  margin-top: 5rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.city-arrow {
+  color: #8D8F8B;
+  font-size: 42rpx;
+  margin-left: 12rpx;
+}
+
+.transport-card {
+  padding: 4rpx 24rpx;
+}
+
+.transport-row {
+  align-items: center;
+  display: flex;
+  padding: 24rpx 0;
+}
+
+.transport-row + .transport-row {
+  border-top: 2rpx solid #E6E1DA;
+}
+
+.transport-icon {
+  align-items: center;
+  background: #E7EEF1;
+  border-radius: 16rpx;
+  display: flex;
+  height: 60rpx;
+  justify-content: center;
+  margin-right: 18rpx;
+  width: 60rpx;
+}
+
+.transport-main {
+  flex: 1;
+}
+
+.transport-route {
+  font-size: 27rpx;
+  font-weight: 620;
+}
+
+.transport-meta {
+  color: #777975;
+  font-size: 22rpx;
+  margin-top: 5rpx;
+}
+
+.status-text {
+  color: #5D7B61;
+  font-size: 22rpx;
+}
+

@@ -1,0 +1,86 @@
+.cat {
+  height: 86rpx;
+  position: relative;
+  width: 94rpx;
+}
+
+.cat--small {
+  transform: scale(0.78);
+  transform-origin: center;
+}
+
+.ear {
+  background: #E9D8BD;
+  border: 3rpx solid #2E3130;
+  height: 34rpx;
+  position: absolute;
+  top: 2rpx;
+  transform: rotate(45deg);
+  width: 34rpx;
+}
+
+.ear--left {
+  left: 13rpx;
+}
+
+.ear--right {
+  right: 13rpx;
+}
+
+.face {
+  background: #F4E7D3;
+  border: 3rpx solid #2E3130;
+  border-radius: 46% 46% 50% 50%;
+  bottom: 8rpx;
+  height: 66rpx;
+  left: 9rpx;
+  position: absolute;
+  width: 76rpx;
+}
+
+.eye {
+  background: #2E3130;
+  border-radius: 50%;
+  height: 9rpx;
+  position: absolute;
+  top: 25rpx;
+  width: 9rpx;
+}
+
+.eye--left {
+  left: 19rpx;
+}
+
+.eye--right {
+  right: 19rpx;
+}
+
+.nose {
+  background: #D96A60;
+  border-radius: 50%;
+  height: 7rpx;
+  left: 35rpx;
+  position: absolute;
+  top: 37rpx;
+  width: 7rpx;
+}
+
+.mouth {
+  font-size: 22rpx;
+  left: 29rpx;
+  position: absolute;
+  top: 38rpx;
+}
+
+.scarf {
+  background: #A85549;
+  border: 3rpx solid #2E3130;
+  border-radius: 999rpx;
+  bottom: 0;
+  height: 15rpx;
+  left: 18rpx;
+  position: absolute;
+  transform: rotate(-4deg);
+  width: 62rpx;
+}
+

@@ -1,0 +1,40 @@
+<view class="page ticket-page">
+  <view class="page-title">旅行票夹</view>
+  <view class="page-subtitle">酒店、交通和门票集中保存</view>
+
+  <scroll-view class="category-scroll" scroll-x enhanced show-scrollbar="false">
+    <view class="category-row">
+      <view
+        wx:for="{{categories}}"
+        wx:key="*this"
+        class="category-chip {{activeCategory === item ? 'category-chip--active' : ''}}"
+        data-category="{{item}}"
+        bindtap="handleCategory"
+      >{{item}}</view>
+    </view>
+  </scroll-view>
+
+  <view class="ticket-list">
+    <view
+      wx:for="{{filteredTickets}}"
+      wx:key="id"
+      class="ticket-card ticket-card--{{item.tone}} pressable"
+      data-id="{{item.id}}"
+      bindtap="openTicket"
+    >
+      <view class="ticket-notch ticket-notch--left"></view>
+      <view class="ticket-notch ticket-notch--right"></view>
+      <view class="ticket-category">{{item.category}}</view>
+      <view class="ticket-title">{{item.title}}</view>
+      <view class="ticket-subtitle">{{item.subtitle}}</view>
+      <view class="ticket-bottom">
+        <view>
+          <view class="ticket-date">{{item.date}}</view>
+          <view class="ticket-status">● {{item.status}}</view>
+        </view>
+        <view class="qr-box">▦</view>
+      </view>
+    </view>
+  </view>
+</view>
+

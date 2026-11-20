@@ -1,0 +1,19 @@
+<view class="tab-shell">
+  <view class="tab-inner">
+    <view
+      wx:for="{{list}}"
+      wx:key="pagePath"
+      class="tab-item {{selected === index ? 'tab-item--active' : ''}}"
+      data-index="{{index}}"
+      data-path="{{item.pagePath}}"
+      bindtap="switchTab"
+      aria-role="button"
+      aria-label="{{item.text}}"
+    >
+      <view class="tab-icon">{{item.icon}}</view>
+      <text class="tab-text">{{item.text}}</text>
+      <view wx:if="{{selected === index}}" class="active-mark"></view>
+    </view>
+  </view>
+</view>
+

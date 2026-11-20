@@ -1,0 +1,259 @@
+.place-page {
+  background: #F7F4EE;
+  min-height: 100vh;
+}
+
+.photo-hero {
+  background: linear-gradient(#BFD2DA 0%, #E9E1D2 60%, #C7B89B 100%);
+  height: 420rpx;
+  overflow: hidden;
+  position: relative;
+}
+
+.photo-sky {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  height: 120rpx;
+  left: 70rpx;
+  position: absolute;
+  top: 50rpx;
+  width: 260rpx;
+}
+
+.photo-building {
+  bottom: 44rpx;
+  left: 52rpx;
+  position: absolute;
+  right: 52rpx;
+}
+
+.roof {
+  border-bottom: 42rpx solid #68665D;
+  border-left: 50rpx solid transparent;
+  border-right: 50rpx solid transparent;
+  height: 0;
+  margin: 0 auto;
+  width: 430rpx;
+}
+
+.building-body {
+  background: #D5C7AD;
+  border: 3rpx solid rgba(46, 49, 48, 0.55);
+  display: flex;
+  height: 118rpx;
+  justify-content: space-around;
+  padding: 24rpx 36rpx;
+}
+
+.window {
+  background: #77756D;
+  border-radius: 22rpx 22rpx 0 0;
+  height: 70rpx;
+  width: 42rpx;
+}
+
+.glass-pyramid {
+  bottom: 38rpx;
+  color: rgba(75, 96, 104, 0.78);
+  font-size: 160rpx;
+  left: 300rpx;
+  line-height: 1;
+  position: absolute;
+}
+
+.photo-label {
+  background: rgba(255, 252, 247, 0.86);
+  border-radius: 999rpx;
+  bottom: 22rpx;
+  font-size: 21rpx;
+  left: 24rpx;
+  padding: 8rpx 16rpx;
+  position: absolute;
+}
+
+.place-content {
+  background: #F7F4EE;
+  border-radius: 34rpx 34rpx 0 0;
+  margin-top: -24rpx;
+  padding: 34rpx 32rpx 70rpx;
+  position: relative;
+}
+
+.place-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.place-kicker {
+  color: #7A7C78;
+  font-size: 23rpx;
+}
+
+.place-title {
+  font-size: 46rpx;
+  font-weight: 700;
+  margin-top: 5rpx;
+}
+
+.status-row {
+  display: flex;
+  margin-top: 20rpx;
+}
+
+.status-row .pill + .pill {
+  margin-left: 12rpx;
+}
+
+.info-card {
+  margin-top: 26rpx;
+  padding: 4rpx 24rpx;
+}
+
+.info-row {
+  align-items: flex-start;
+  display: flex;
+  padding: 24rpx 0;
+}
+
+.info-row + .info-row {
+  border-top: 2rpx solid #E6E1DA;
+}
+
+.info-icon {
+  align-items: center;
+  background: #ECE8E1;
+  border-radius: 50%;
+  display: flex;
+  height: 58rpx;
+  justify-content: center;
+  margin-right: 18rpx;
+  width: 58rpx;
+}
+
+.info-label,
+.booking-label {
+  color: #7A7C78;
+  font-size: 22rpx;
+}
+
+.info-value,
+.booking-value {
+  font-size: 26rpx;
+  margin-top: 4rpx;
+}
+
+.booking-card {
+  align-items: center;
+  display: flex;
+  margin-top: 18rpx;
+  padding: 22rpx 24rpx;
+}
+
+.ticket-icon {
+  align-items: center;
+  background: #F2E7C9;
+  border-radius: 16rpx;
+  display: flex;
+  height: 60rpx;
+  justify-content: center;
+  margin-right: 18rpx;
+  width: 60rpx;
+}
+
+.booking-main {
+  flex: 1;
+}
+
+.qr-mini {
+  font-size: 34rpx;
+}
+
+.chevron {
+  color: #8D8F8B;
+  font-size: 42rpx;
+  margin-left: 12rpx;
+}
+
+.note-card {
+  padding: 28rpx;
+}
+
+.note-quote {
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+.note-author {
+  color: #7A7C78;
+  font-size: 22rpx;
+  margin-top: 12rpx;
+}
+
+.check-card {
+  padding: 8rpx 24rpx;
+}
+
+.check-row {
+  align-items: center;
+  display: flex;
+  min-height: 82rpx;
+}
+
+.check-row + .check-row {
+  border-top: 2rpx solid #E8E3DC;
+}
+
+.checkbox {
+  align-items: center;
+  border: 3rpx solid #B8B9B5;
+  border-radius: 8rpx;
+  box-sizing: border-box;
+  display: flex;
+  height: 36rpx;
+  justify-content: center;
+  margin-right: 18rpx;
+  width: 36rpx;
+}
+
+.checkbox--done {
+  background: #6F8F72;
+  border-color: #6F8F72;
+  color: white;
+}
+
+.check-text {
+  font-size: 26rpx;
+}
+
+.check-text--done {
+  color: #8B8D89;
+  text-decoration: line-through;
+}
+
+.mini-map-card {
+  margin-top: 40rpx;
+  overflow: hidden;
+}
+
+.mini-map {
+  height: 260rpx;
+  width: 100%;
+}
+
+.mini-map-copy {
+  font-size: 25rpx;
+  padding: 20rpx 24rpx;
+}
+
+.action-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 32rpx;
+}
+
+.action-button {
+  margin: 0;
+  width: calc(50% - 10rpx);
+}
+

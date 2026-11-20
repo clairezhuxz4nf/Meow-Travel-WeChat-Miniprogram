@@ -1,0 +1,129 @@
+<view class="page expenses-page">
+  <view class="page-header">
+    <view>
+      <view class="page-title">花费</view>
+      <view class="page-subtitle">{{tripName}} · 3 位同行人</view>
+    </view>
+    <cat-stamp mood="happy" size="small" />
+  </view>
+
+  <view class="total-card card">
+    <view class="total-label">团队总花费</view>
+    <view class="total-amount"><text class="currency">{{currency}}</text>{{expenses.total}}</view>
+    <view class="budget-row">
+      <view class="budget-track">
+        <view class="budget-fill" style="width: {{budgetPercent > 100 ? 100 : budgetPercent}}%;"></view>
+      </view>
+      <text class="budget-text">预算 {{budgetPercent}}%</text>
+    </view>
+    <button class="primary-button add-button" bindtap="openEntrySheet">＋ 记一笔</button>
+  </view>
+
+  <view class="section">
+    <view class="section-heading">
+      <view class="section-title">成员结算</view>
+      <view class="section-action">查看结算方案</view>
+    </view>
+    <scroll-view class="member-scroll" scroll-x enhanced show-scrollbar="false">
+      <view class="member-row">
+        <view wx:for="{{expenses.members}}" wx:key="name" class="member-card card">
+          <view class="avatar">{{item.initial}}</view>
+          <view class="member-name">{{item.name}}</view>
+          <view class="balance {{item.type === '应收' ? 'balance--receive' : 'balance--pay'}}">
+            {{item.type}} {{currency}}{{item.balance}}
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="section">
+    <view class="section-heading">
+      <view class="section-title">花在哪里</view>
+      <view class="section-action">{{currency}}{{expenses.total}}</view>
+    </view>
+    <view class="category-card card">
+      <view class="donut-wrap">
+        <view class="donut">
+          <view class="donut-center">
+            <text class="donut-value">{{budgetPercent}}%</text>
+            <text class="donut-label">预算</text>
+          </view>
+        </view>
+      </view>
+      <view class="legend">
+        <view wx:for="{{expenses.categories}}" wx:key="name" class="legend-row">
+          <view class="legend-dot" style="background: {{item.color}};"></view>
+          <text class="legend-name">{{item.name}}</text>
+          <text class="legend-percent">{{item.percent}}%</text>
+          <text class="legend-value">{{currency}}{{item.value}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="section-heading">
+      <view class="section-title">最近记录</view>
+      <view class="section-action">全部</view>
+    </view>
+    <view class="recent-card card">
+      <view wx:for="{{expenses.recent}}" wx:key="id" class="expense-row">
+        <view class="expense-icon">{{item.icon}}</view>
+        <view class="expense-main">
+          <view class="expense-title">{{item.title}}</view>
+          <view class="expense-detail">{{item.detail}}</view>
+        </view>
+        <view class="expense-side">
+          <view class="expense-amount">{{currency}}{{item.amount}}</view>
+          <view class="expense-date">{{item.date}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<view wx:if="{{showEntrySheet}}" class="overlay" bindtap="closeEntrySheet">
+  <view class="entry-sheet" catchtap="stopPropagation">
+    <view class="sheet-handle"></view>
+    <view class="sheet-title">记一笔</view>
+    <view class="sheet-copy">记录后会自动计入团队总花费</view>
+
+    <view class="form-field">
+      <label class="field-label">名称</label>
+      <input
+        class="field-input"
+        placeholder="例如：咖啡馆午餐"
+        value="{{draft.title}}"
+        data-field="title"
+        bindinput="handleInput"
+      />
+    </view>
+    <view class="form-field">
+      <label class="field-label">金额</label>
+      <view class="amount-input-wrap">
+        <text class="amount-currency">{{currency}}</text>
+        <input
+          class="field-input amount-input"
+          type="digit"
+          placeholder="0.00"
+          value="{{draft.amount}}"
+          data-field="amount"
+          bindinput="handleInput"
+        />
+      </view>
+    </view>
+    <view class="form-field">
+      <label class="field-label">分类</label>
+      <picker value="{{categoryIndex}}" range="{{categoryNames}}" bindchange="handleCategoryChange">
+        <view class="picker-field">{{categoryNames[categoryIndex]}} <text>⌄</text></view>
+      </picker>
+    </view>
+    <view class="payer-row">
+      <text class="field-label">付款人</text>
+      <text class="payer-chip">Claire</text>
+    </view>
+    <button class="primary-button save-button" bindtap="saveExpense">保存记录</button>
+  </view>
+</view>
+

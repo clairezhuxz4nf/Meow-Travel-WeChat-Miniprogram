@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "行程",
+  "usingComponents": {
+    "cat-stamp": "/components/cat-stamp/index"
+  }
+}
+
