@@ -31,7 +31,7 @@
 
 仓库提供一个不依赖微信开发者工具的 H5 预览器，用于快速确认视觉、布局和普通交互：
 
-在线预览：[喵游交互预览](https://clairezhuxz4nf.github.io/Meow-Travel-WeChat-Miniprogram/)
+在线预览：[喵游交互预览](https://htmlpreview.github.io/?https://github.com/clairezhuxz4nf/Meow-Travel-WeChat-Miniprogram/blob/main/preview/index.html)
 
 ```bash
 python3 -m http.server 4173
