@@ -503,7 +503,11 @@ function moveSelectedPlace(targetDayNumber) {
   const sourceDay = getDay(place?._dayNumber);
   const targetDay = getDay(targetDayNumber);
   if (!place || !sourceDay || !targetDay || sourceDay.number === targetDay.number) return;
-  const index = sourceDay.items.findIndex((item) => item.id === place.id || (item.name === place.name && item.coords?.join(',') === place.coords?.join(',')));
+  const index = sourceDay.items.findIndex((item) => (
+    place.id
+      ? item.id === place.id
+      : item.name === place.name && item.coords?.join(',') === place.coords?.join(',')
+  ));
   if (index < 0) return;
   const [movedPlace] = sourceDay.items.splice(index, 1);
   targetDay.items.push(movedPlace);
