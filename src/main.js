@@ -340,6 +340,8 @@ window.addEventListener('hashchange', () => {
   if (['today', 'trip', 'expenses'].includes(tab) && tab !== state.tab) { state.tab = tab; render(); }
 });
 
-if ('serviceWorker' in navigator && import.meta.env.PROD) navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`);
+if ('serviceWorker' in navigator && import.meta.env.PROD && location.hostname !== 'htmlpreview.github.io') {
+  navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`);
+}
 
 render();

@@ -14,6 +14,12 @@
 
 地图使用 Leaflet + OpenStreetMap；Google Maps 只用于外部地点导航，因此无需 Google Maps API key。行程目前是静态 JavaScript 数据，不包含 Notion 中的预订码或私人票据。
 
+## 在线预览
+
+[打开喵游交互预览](https://htmlpreview.github.io/?https://github.com/clairezhuxz4nf/Meow-Travel-WeChat-Miniprogram/blob/main/preview/index.html)
+
+预览文件由 `npm run build` 自动打成单个 HTML，不依赖 GitHub Pages 仓库设置。
+
 ## 本地开发
 
 ```bash
@@ -43,7 +49,7 @@ npm run build
 ├── miniprogram/           # 旧版微信小程序原型
 ├── preview/               # 旧版静态预览
 ├── docs/                  # 视觉与微信开发规范
-└── .github/workflows/     # GitHub Pages 发布
+└── preview/index.html     # 可直接分享的单文件交互预览
 ```
 
 ## 数据与隐私
