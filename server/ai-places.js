@@ -2,21 +2,18 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 const placeSchema = {
   type: 'object',
-  additionalProperties: false,
   required: ['places'],
   properties: {
     places: {
       type: 'array',
-      maxItems: 12,
       items: {
         type: 'object',
-        additionalProperties: false,
         required: ['name', 'query', 'type', 'note'],
         properties: {
-          name: { type: 'string', minLength: 2, maxLength: 80 },
-          query: { type: 'string', minLength: 2, maxLength: 140 },
+          name: { type: 'string' },
+          query: { type: 'string' },
           type: { type: 'string', enum: ['sight', 'food', 'shopping', 'hotel', 'transport'] },
-          note: { type: 'string', maxLength: 120 }
+          note: { type: 'string' }
         }
       }
     }
@@ -52,10 +49,11 @@ function corsHeaders(request, allowedOrigin = '') {
   };
 }
 
-function extractAssistantText(payload) {
-  const content = payload?.choices?.[0]?.message?.content;
-  if (typeof content === 'string') return content;
-  if (Array.isArray(content)) return content.map((item) => item?.text || '').join('');
+function extractGeminiText(payload) {
+  const outputText = payload?.interaction?.output_text || payload?.output_text;
+  if (typeof outputText === 'string') return outputText;
+  const parts = payload?.candidates?.[0]?.content?.parts;
+  if (Array.isArray(parts)) return parts.map((item) => item?.text || '').join('');
   return '';
 }
 
@@ -74,7 +72,8 @@ export async function handleAIPlacesRequest(request, options = {}) {
   }
 
   const imageDataUrl = String(input.imageDataUrl || '');
-  if (!/^data:image\/(png|jpeg|webp);base64,/i.test(imageDataUrl)) {
+  const imageMatch = imageDataUrl.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/i);
+  if (!imageMatch) {
     return json({ error: 'A PNG, JPEG, or WebP image is required' }, 400, headers);
   }
   if (imageDataUrl.length > MAX_IMAGE_BYTES * 1.4) {
@@ -95,26 +94,20 @@ export async function handleAIPlacesRequest(request, options = {}) {
 
   let upstream;
   try {
-    upstream = await fetch('https://api.openai.com/v1/chat/completions', {
+    upstream = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
       method: 'POST',
       headers: {
-        authorization: `Bearer ${options.apiKey}`,
-        'content-type': 'application/json'
+        'x-goog-api-key': options.apiKey,
+        'content-type': 'application/json',
+        'Api-Revision': '2026-05-20'
       },
       body: JSON.stringify({
-        model: options.model || 'gpt-6-luna',
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'text', text: prompt },
-            { type: 'image_url', image_url: { url: imageDataUrl, detail: 'high' } }
-          ]
-        }],
-        response_format: {
-          type: 'json_schema',
-          json_schema: { name: 'travel_places', strict: true, schema: placeSchema }
-        },
-        max_completion_tokens: 1200
+        model: options.model || 'gemini-3.5-flash-lite',
+        input: [
+          { type: 'text', text: prompt },
+          { type: 'image', data: imageMatch[2], mime_type: imageMatch[1].toLowerCase() }
+        ],
+        response_format: { type: 'text', mime_type: 'application/json', schema: placeSchema }
       })
     });
   } catch {
@@ -123,14 +116,14 @@ export async function handleAIPlacesRequest(request, options = {}) {
 
   const payload = await upstream.json().catch(() => ({}));
   if (!upstream.ok) {
-    const message = payload?.error?.message || `OpenAI API returned ${upstream.status}`;
+    const message = payload?.error?.message || `Gemini API returned ${upstream.status}`;
     return json({ error: message }, upstream.status, headers);
   }
 
   try {
-    const parsed = JSON.parse(extractAssistantText(payload));
+    const parsed = JSON.parse(extractGeminiText(payload));
     const places = Array.isArray(parsed.places) ? parsed.places.slice(0, 12) : [];
-    return json({ places, model: options.model || 'gpt-6-luna' }, 200, headers);
+    return json({ places, model: options.model || 'gemini-3.5-flash-lite' }, 200, headers);
   } catch {
     return json({ error: 'AI returned an unreadable result' }, 502, headers);
   }

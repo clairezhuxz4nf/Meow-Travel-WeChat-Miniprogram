@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import { handleAIPlacesRequest } from './server/ai-places.js';
 
-function localAIProxy() {
+function localAIProxy(env) {
   return {
     name: 'miaoyou-local-ai-proxy',
     configureServer(server) {
@@ -14,8 +14,8 @@ function localAIProxy() {
           body: ['GET', 'HEAD'].includes(req.method) ? undefined : Buffer.concat(chunks)
         });
         const response = await handleAIPlacesRequest(request, {
-          apiKey: process.env.OPENAI_API_KEY,
-          model: process.env.OPENAI_MODEL || 'gpt-6-luna'
+          apiKey: env.GEMINI_API_KEY,
+          model: env.GEMINI_MODEL || 'gemini-3.5-flash-lite'
         });
         res.statusCode = response.status;
         response.headers.forEach((value, key) => res.setHeader(key, value));
@@ -25,8 +25,11 @@ function localAIProxy() {
   };
 }
 
-export default defineConfig({
-  base: process.env.GITHUB_ACTIONS ? '/Meow-Travel-WeChat-Miniprogram/' : '/',
-  plugins: [localAIProxy()],
-  build: { outDir: 'dist', sourcemap: true, assetsInlineLimit: 2_000_000 }
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  return {
+    base: process.env.GITHUB_ACTIONS ? '/Meow-Travel-WeChat-Miniprogram/' : '/',
+    plugins: [localAIProxy(env)],
+    build: { outDir: 'dist', sourcemap: true, assetsInlineLimit: 2_000_000 }
+  };
 });

@@ -341,7 +341,7 @@ function aiImportPanel() {
         <input id="ai-image-input" type="file" accept="image/png,image/jpeg,image/webp" />
         ${state.aiImageUrl ? `<img src="${state.aiImageUrl}" alt="待识别的旅行截图" />` : '<span class="ai-upload-icon">▧</span><strong>上传旅行截图</strong><small>支持小红书、攻略笔记或聊天截图</small>'}
       </label>
-      <p class="ai-privacy"><strong>GPT 图片识别</strong> · 截图会发送到喵游的 AI 服务，API Key 只保存在服务端；地点名称会再通过 OpenStreetMap 校验坐标。</p>
+      <p class="ai-privacy"><strong>Gemini 图片识别</strong> · 截图会发送到喵游的 AI 服务，API Key 只保存在服务端；地点名称会再通过 OpenStreetMap 校验坐标。</p>
       <button class="primary-button" type="button" data-run-ai ${!state.aiImageFile || state.aiWorking ? 'disabled' : ''}>${state.aiWorking ? 'AI 正在理解截图…' : '用 AI 识别地点'}</button>
       <div class="ai-status" aria-live="polite">${escapeHtml(state.aiStatus)}</div>
       ${state.aiResults.length ? `
@@ -644,9 +644,9 @@ async function recognizeAIImage() {
     state.aiStatus = `AI 识别到 ${matched.length} 个地点，请确认坐标后批量添加`;
   } catch (error) {
     if (error.status === 503 || error.status === 404) {
-      state.aiStatus = 'AI 服务尚未连接：请先在服务端配置 OPENAI_API_KEY';
+      state.aiStatus = 'AI 服务尚未连接：请先在服务端配置 GEMINI_API_KEY';
     } else if (/quota|billing|credit/i.test(error.message)) {
-      state.aiStatus = 'AI 账户额度不足，请检查 OpenAI API 账单或额度';
+      state.aiStatus = 'AI 账户额度不足，请检查 Gemini API 免费额度或账单';
     } else {
       state.aiStatus = `AI 识别失败：${error.message || '请稍后重试'}`;
     }
