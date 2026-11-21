@@ -1,0 +1,10 @@
+{
+  "name": "喵游 · Europe Trip",
+  "short_name": "喵游",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6f1e8",
+  "theme_color": "#f6f1e8",
+  "lang": "zh-CN",
+  "icons": []
+}

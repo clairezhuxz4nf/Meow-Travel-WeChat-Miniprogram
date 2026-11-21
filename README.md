@@ -1,73 +1,56 @@
-# 喵游
+# 喵游 · Meow Trip
 
-喵游是一款原生 JavaScript 微信小程序，用于管理多目的地旅行。打开小程序默认进入“今日”，让用户在旅行途中第一时间看到当前城市、下一项安排、全天时间线和路线地图；“行程”用于查看整段旅程、城市站点和票券；“花费”用于快速记账与多人结算。
+喵游是一个 mobile-first 的旅行行程网页。当前版本为 Claire 的 2026–2027 欧洲冬日旅行定制，行程数据来自旅行 Notion：罗马 → 佛罗伦萨 → 巴塞罗那 → 巴黎，共 14 天、76 个地点。
 
-## 当前功能
+## 已实现
 
-- 今日：日期切换、下一项安排、全天时间线、交通耗时、预订状态、路线地图
-- 行程：整段旅程概览、城市站点、跨城交通、票夹与团体花费入口
-- 城市：地图 Pin、类别筛选、城市日程与地点详情
-- 票夹：酒店、交通、门票分类与确认状态
-- 花费一级 Tab：总额、分类、成员应收应付、最近记录与快速记账
-- 地点详情：营业时间、地址、预订状态、共享笔记与打卡清单
+- **今日**：14 天日期切换、今日地图、时间线、交通摘要、票券入口
+- **行程**：城市切换、按天筛选、地点分类、非当日 Pin 灰显、当日虚线路线
+- **地点详情**：时间、备注、票券状态，一键在 Google Maps 打开
+- **票券夹**：展示当天需要出示或购买的票券
+- **花费**：多币种总览、分类统计、成员结算提示、新增记账；数据保存在本机
+- **PWA**：可安装、基础离线壳缓存
+- **旧版微信小程序原型**：仍保留在 `miniprogram/`，方便后续迁移
 
-## 技术栈
+地图使用 Leaflet + OpenStreetMap；Google Maps 只用于外部地点导航，因此无需 Google Maps API key。行程目前是静态 JavaScript 数据，不包含 Notion 中的预订码或私人票据。
 
-- 微信原生小程序
-- JavaScript、WXML、WXSS
-- 微信原生 `map` 组件
-- 自定义 TabBar
-- 本地模拟数据；服务层预留后端与地图 Provider 接口
-
-## 本地运行
-
-1. 安装并打开[微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)。
-2. 选择“导入项目”。
-3. 项目目录选择本仓库根目录。
-4. 使用自己的小程序 AppID；仅预览时也可保留 `project.config.json` 中的 `touristappid`。
-5. 编译后默认进入“今日”页。
-
-## 边改边看的浏览器预览
-
-仓库提供一个不依赖微信开发者工具的 H5 预览器，用于快速确认视觉、布局和普通交互：
-
-在线预览：[喵游交互预览](https://htmlpreview.github.io/?https://github.com/clairezhuxz4nf/Meow-Travel-WeChat-Miniprogram/blob/main/preview/index.html)
+## 本地开发
 
 ```bash
-python3 -m http.server 4173
+npm install
+npm run dev
 ```
 
-浏览器打开 `http://localhost:4173/preview/`。预览器支持三个 Tab、日期切换和新增花费。它不是微信运行时，原生 `map`、自定义 TabBar、授权、网络域名和真机兼容性仍需在微信开发者工具中测试。
+浏览器打开终端显示的地址。建议使用 Chrome DevTools 的 iPhone 视口测试。
+
+## 校验与构建
+
+```bash
+npm run check
+npm run build
+```
+
+`npm run check` 会校验 14 天、城市关联和所有坐标；`npm run build` 生成 `dist/`。
 
 ## 项目结构
 
 ```text
-miaoyou-miniprogram/
-├── docs/                       # 开发与视觉规范
-├── miniprogram/
-│   ├── components/             # 复用组件
-│   ├── custom-tab-bar/         # 今日、行程双 Tab
-│   ├── data/                   # 首版模拟数据
-│   ├── pages/                  # 页面
-│   ├── utils/                  # 日期与格式化工具
-│   ├── app.js
-│   ├── app.json
-│   └── app.wxss
-├── scripts/validate.js         # 结构与配置校验
-└── project.config.json
+├── src/
+│   ├── data/trip.js       # 14 天静态行程、坐标、票券与初始花费
+│   ├── main.js            # 页面、地图和交互
+│   └── styles.css         # 喵游低饱和手绘视觉系统
+├── public/                # PWA manifest 与 service worker
+├── miniprogram/           # 旧版微信小程序原型
+├── preview/               # 旧版静态预览
+├── docs/                  # 视觉与微信开发规范
+└── .github/workflows/     # GitHub Pages 发布
 ```
 
-## 地图与图片
+## 数据与隐私
 
-首版使用微信原生 `map` 组件，业务数据通过统一字段驱动，不直接依赖某一家地图服务的 SDK。后续接入 Google Maps、腾讯位置服务或其他 Provider 时，应在服务层完成坐标、地点 ID 与路线结果转换。
+- 公开仓库只保存通用行程，不保存 Booking code、护照、订单 PDF 或二维码。
+- 当前新增花费写入浏览器 `localStorage`，不会上传。
+- `.env.example` 仅预留后续 Supabase 与 OpenRouteService 配置；首版不依赖后端。
+- 票据文件后续应存入私有对象存储，不应提交到 Git。
 
-生产环境使用远程实拍图片时，需要在微信公众平台配置合法下载域名。视觉层不对照片添加高饱和滤镜，UI 使用低饱和色以保证地图和照片是页面主角。
-
-## 校验
-
-```bash
-node scripts/validate.js
-```
-
-开发决策见 [微信小程序开发规范](docs/wechat-development-guidelines.md)，视觉规则见 [喵游视觉设计规范](docs/visual-guidelines.md)。
-
+视觉规范见 [docs/visual-guidelines.md](docs/visual-guidelines.md)。
