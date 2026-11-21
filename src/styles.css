@@ -356,6 +356,17 @@ h1 { font-size: clamp(30px, 9vw, 38px); }
 .place-drawer { max-height: 92vh; overflow-y: auto; }
 .move-day-control { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin: 0 0 12px; padding: 11px 12px; border: 1.4px solid var(--ink); border-radius: 13px; background: #fffaf2; color: var(--ink); font-size: 13px; font-weight: 700; }
 .move-day-control select { max-width: 155px; border: 0; background: #ede6d9; border-radius: 9px; padding: 8px 24px 8px 9px; color: var(--ink); font-size: 12px; font-weight: 700; }
+.location-warning, .verified-address { display: grid; gap: 4px; margin: 0 0 12px; padding: 11px 12px; border-radius: 13px; font-size: 12px; line-height: 1.45; }
+.location-warning { border: 1.4px solid #b65e4c; background: #f7ddd4; color: #7e382e; }
+.location-warning strong { font-size: 13px; }
+.verified-address { border: 1.4px solid #73866b; background: #e1ebdf; color: #44533f; }
+.verified-address span { font-size: 10px; font-weight: 800; letter-spacing: .06em; }
+.verified-address strong { font-size: 12px; }
+.place-edit-actions { display: grid; grid-template-columns: 1.35fr 1fr; gap: 8px; margin-bottom: 10px; }
+.secondary-button, .danger-button { border: 1.4px solid var(--ink); border-radius: 12px; padding: 11px 8px; background: #fffaf2; color: var(--ink); font-size: 12px; font-weight: 700; cursor: pointer; }
+.danger-button { border-color: #b65e4c; color: #a54f40; }
+.danger-button.armed { background: #b65e4c; color: #fffaf2; }
+.disabled-button { background: #9a9c96; box-shadow: none; cursor: not-allowed; opacity: .75; }
 
 .add-place-sheet { max-height: 92vh; overflow-y: auto; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
 .add-place-title { margin-bottom: 12px; }
@@ -364,7 +375,7 @@ h1 { font-size: clamp(30px, 9vw, 38px); }
 .add-mode-tabs button.active { background: #fffaf2; color: var(--ink); box-shadow: 1px 2px 0 rgba(46,49,48,.09); }
 .add-day-select, .place-search-wrap > label, .place-details-form > label, .place-details-form .form-row label { display: grid; gap: 6px; color: var(--ink); font-size: 13px; font-weight: 700; }
 .add-day-select { grid-template-columns: auto 1fr; align-items: center; margin-bottom: 12px; }
-.add-day-select select, .place-search-wrap input, .place-details-form input, .place-details-form select { width: 100%; min-width: 0; border: 1.4px solid var(--ink); border-radius: 11px; background: #fffaf2; padding: 11px; color: var(--ink); outline: none; }
+.add-day-select select, .place-search-wrap input, .place-details-form input, .place-details-form select { width: 100%; min-width: 0; border: 1.4px solid var(--ink); border-radius: 11px; background: #fffaf2; padding: 11px; color: var(--ink); outline: none; font-size: 16px; line-height: 1.25; }
 .place-search-wrap { margin-top: 4px; }
 .place-search-wrap input:focus, .place-details-form input:focus, .place-details-form select:focus { box-shadow: 0 0 0 3px rgba(138,174,193,.3); }
 .search-helper, .map-center-note { margin: 6px 2px 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
@@ -381,6 +392,41 @@ h1 { font-size: clamp(30px, 9vw, 38px); }
 .selected-search-place small { color: var(--muted); font-size: 11px; }
 .place-details-form { display: grid; gap: 12px; padding-top: 5px; }
 .place-details-form .primary-button { margin-top: 2px; }
+.repair-context { display: grid; gap: 3px; margin: 6px 0 12px; padding: 11px 12px; border: 1.4px solid var(--ink); border-radius: 13px; background: #f7ddd4; }
+.repair-context span { color: #a34c3e; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+.repair-context strong { font-size: 14px; }
+.repair-context small { color: var(--muted); font-size: 11px; line-height: 1.45; }
+
+.ai-import-panel { display: grid; gap: 11px; }
+.ai-upload { position: relative; min-height: 190px; display: grid; place-items: center; align-content: center; gap: 6px; overflow: hidden; border: 1.6px dashed var(--ink); border-radius: 16px; background: #fffaf2; text-align: center; cursor: pointer; }
+.ai-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.ai-upload-icon { font-size: 38px; color: var(--blue); transform: rotate(-3deg); }
+.ai-upload strong { font-size: 15px; }
+.ai-upload small { color: var(--muted); font-size: 11px; }
+.ai-upload.has-image { min-height: 220px; border-style: solid; }
+.ai-upload img { width: 100%; max-height: 310px; object-fit: contain; background: #e8e3da; }
+.ai-privacy { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.ai-status { min-height: 20px; color: var(--olive); font-size: 12px; font-weight: 700; }
+.ai-results-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 3px; }
+.ai-results-head > div { display: grid; gap: 2px; }
+.ai-results-head strong { font-size: 15px; }
+.ai-results-head span { color: var(--muted); font-size: 11px; }
+.ai-results-head button { border: 0; border-bottom: 2px solid var(--yellow); background: transparent; padding: 4px 0; font-size: 11px; font-weight: 700; cursor: pointer; }
+.ai-results-list { display: grid; gap: 8px; }
+.ai-result { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; padding: 10px; border: 1.3px solid var(--ink); border-radius: 12px; background: #fffaf2; }
+.ai-result.unmatched { opacity: .62; }
+.ai-result-check { width: 18px !important; height: 18px; accent-color: var(--olive); }
+.ai-result-copy { min-width: 0; display: grid; gap: 2px; }
+.ai-result-copy strong, .ai-result-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ai-result-copy strong { font-size: 13px; }
+.ai-result-copy small { color: var(--muted); font-size: 10px; }
+.ai-match-status { border-radius: 999px; padding: 4px 6px; background: #e1ebdf; color: #4e6248; font-size: 9px; font-weight: 800; }
+.ai-result.unmatched .ai-match-status { background: #eee5db; color: #716c65; }
+
+/* iOS Safari zooms focused controls below 16px; keep editing at the native scale. */
+@supports (-webkit-touch-callout: none) {
+  .form-sheet input, .form-sheet select, .form-sheet textarea { font-size: 16px !important; }
+}
 
 .expense-hero { min-height: 235px; padding: 24px 18px 17px; border: 1.7px solid var(--ink); border-radius: 19px 23px 17px 21px; background: linear-gradient(150deg, #fff9ee, #e9dfcf); box-shadow: 5px 6px 0 rgba(46,49,48,.08); }
 .expense-hero::after { right: 19px; top: 14px; color: var(--yellow); opacity: .72; }

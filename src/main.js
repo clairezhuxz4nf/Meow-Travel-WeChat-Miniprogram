@@ -37,6 +37,10 @@ if (savedItinerary) {
     if (Array.isArray(savedItinerary[day.number])) day.items = savedItinerary[day.number];
   });
 }
+// This seed entry used an approximate pin and is known not to resolve reliably in Google Maps.
+days.forEach((day) => day.items.forEach((item) => {
+  if (item.name === 'Café Marly' && !item.address) item.locationStatus = 'missing';
+}));
 const state = {
   tab: location.hash.replace('#', '') || 'today',
   todayDay: 1,
@@ -47,13 +51,20 @@ const state = {
   showTickets: false,
   showExpenseForm: false,
   showAddPlace: false,
-  addPlaceMode: 'search',
+  addPlaceMode: 'manual',
   addDayNumber: null,
   placeSearchQuery: '',
   placeSearchResults: [],
   placeSearchStatus: '',
   selectedSearchResult: null,
-  manualMapCenter: null,
+  repairPlace: null,
+  deletePlaceArmed: false,
+  aiImageFile: null,
+  aiImageUrl: '',
+  aiRecognizedText: '',
+  aiStatus: '',
+  aiResults: [],
+  aiWorking: false,
   sheetExpanded: false,
   expenses: savedExpenses || expenseSeed
 };
@@ -101,6 +112,25 @@ function resetAddPlace() {
   state.placeSearchResults = [];
   state.placeSearchStatus = '';
   state.selectedSearchResult = null;
+  state.repairPlace = null;
+  state.aiRecognizedText = '';
+  state.aiStatus = '';
+  state.aiResults = [];
+  state.aiWorking = false;
+  state.aiImageFile = null;
+  if (state.aiImageUrl) URL.revokeObjectURL(state.aiImageUrl);
+  state.aiImageUrl = '';
+}
+
+function samePlace(item, place) {
+  if (!item || !place) return false;
+  return place.id
+    ? item.id === place.id
+    : item.name === place.name && item.coords?.join(',') === place.coords?.join(',');
+}
+
+function findPlaceIndex(day, place) {
+  return day?.items.findIndex((item) => samePlace(item, place)) ?? -1;
 }
 
 function shell(content) {
@@ -255,6 +285,7 @@ function expensesView() {
 function placeDrawer(place) {
   const sourceDay = getDay(place._dayNumber);
   const movableDays = sourceDay ? cityDays(sourceDay.cityId) : [];
+  const locationMissing = place.locationStatus === 'missing' || !Array.isArray(place.coords) || place.coords.length !== 2;
   return `
     <div class="overlay" data-close-overlay></div>
     <aside class="place-drawer">
@@ -264,8 +295,13 @@ function placeDrawer(place) {
       <h2>${place.name}</h2>
       <p>${place.note || '已加入这次旅行的地点清单。'}</p>
       <div class="detail-meta"><span>🕒 ${place.time}</span>${place.ticket ? `<span>🎫 ${place.ticket.label} · ${place.ticket.price}</span>` : ''}</div>
+      ${locationMissing ? `<div class="location-warning"><strong>⚠ 地址缺失</strong><span>当前坐标未通过地图搜索确认，请重新搜索后再导航。</span></div>` : place.address ? `<div class="verified-address"><span>✓ 已确认地址</span><strong>${escapeHtml(place.address)}</strong></div>` : ''}
       ${sourceDay ? `<label class="move-day-control"><span>调整到其他日期</span><select id="move-place-day">${movableDays.map((day, index) => `<option value="${day.number}" ${day.number === sourceDay.number ? 'selected' : ''}>第 ${index + 1} 天 · ${day.label.split(' · ')[0]}</option>`).join('')}</select></label>` : ''}
-      <a class="primary-button" href="${googleMapsUrl(place)}" target="_blank" rel="noreferrer">在 Google Maps 打开</a>
+      <div class="place-edit-actions">
+        <button class="secondary-button" data-repair-place>${locationMissing ? '重新搜索并确认地址' : '编辑地点与坐标'}</button>
+        <button class="danger-button ${state.deletePlaceArmed ? 'armed' : ''}" data-delete-place>${state.deletePlaceArmed ? '再次点击确认删除' : '删除地点与坐标'}</button>
+      </div>
+      ${locationMissing ? '<button class="primary-button disabled-button" type="button" disabled>确认地址后开启导航</button>' : `<a class="primary-button" href="${googleMapsUrl(place)}" target="_blank" rel="noreferrer">在 Google Maps 打开</a>`}
     </aside>`;
 }
 
@@ -282,19 +318,43 @@ function ticketWallet() {
     </aside>`;
 }
 
-function placeDetailsForm({ name = '', note = '', isManual = false } = {}) {
+function placeDetailsForm({ name = '', note = '' } = {}) {
   const targetDay = getDay(state.addDayNumber);
   return `
-    <form id="add-place-form" class="place-details-form" data-manual="${isManual}">
+    <form id="add-place-form" class="place-details-form">
       <label>地点名称<input name="placeName" required value="${escapeHtml(name)}" placeholder="例如：锡耶纳大教堂" /></label>
       <div class="form-row">
-        <label>类别<select name="type">${categories.filter((category) => category.id !== 'all').map((category) => `<option value="${category.id}">${category.label}</option>`).join('')}</select></label>
-        <label>时间<input name="time" type="time" value="12:00" required /></label>
+        <label>类别<select name="type">${categories.filter((category) => category.id !== 'all').map((category) => `<option value="${category.id}" ${state.repairPlace?.type === category.id ? 'selected' : ''}>${category.label}</option>`).join('')}</select></label>
+        <label>时间<input name="time" type="time" value="${state.repairPlace?.time || '12:00'}" required /></label>
       </div>
       <label>备注<input name="note" value="${escapeHtml(note)}" placeholder="预约信息、想看的重点……" /></label>
-      ${isManual ? '<p class="map-center-note">将使用你打开“＋”时地图中心点的位置；添加后可以拖动地图核对。</p>' : ''}
-      <button class="primary-button" type="submit">加入${targetDay ? `第 ${cityDays(targetDay.cityId).findIndex((day) => day.number === targetDay.number) + 1} 天` : '当天'}行程</button>
+      <button class="primary-button" type="submit">${state.repairPlace ? '保存并确认正确坐标' : `加入${targetDay ? `第 ${cityDays(targetDay.cityId).findIndex((day) => day.number === targetDay.number) + 1} 天` : '当天'}行程`}</button>
     </form>`;
+}
+
+function aiImportPanel() {
+  const matchedCount = state.aiResults.filter((result) => result.matched).length;
+  return `
+    <section class="ai-import-panel">
+      <label class="ai-upload ${state.aiImageUrl ? 'has-image' : ''}">
+        <input id="ai-image-input" type="file" accept="image/png,image/jpeg,image/webp" />
+        ${state.aiImageUrl ? `<img src="${state.aiImageUrl}" alt="待识别的旅行截图" />` : '<span class="ai-upload-icon">▧</span><strong>上传旅行截图</strong><small>支持小红书、攻略笔记或聊天截图</small>'}
+      </label>
+      <p class="ai-privacy">图片仅在浏览器内识别；识别出的地点名称会发送到 OpenStreetMap 匹配坐标。</p>
+      <button class="primary-button" type="button" data-run-ai ${!state.aiImageFile || state.aiWorking ? 'disabled' : ''}>${state.aiWorking ? '正在识别与匹配…' : '识别截图中的地点'}</button>
+      <div class="ai-status" aria-live="polite">${escapeHtml(state.aiStatus)}</div>
+      ${state.aiResults.length ? `
+        <div class="ai-results-head"><div><strong>识别结果</strong><span>${matchedCount}/${state.aiResults.length} 个已匹配坐标</span></div><button type="button" data-ai-select-all>全选已匹配</button></div>
+        <form id="ai-results-form" class="ai-results-list">
+          ${state.aiResults.map((result, index) => `
+            <article class="ai-result ${result.matched ? 'matched' : 'unmatched'}">
+              <input class="ai-result-check" type="checkbox" name="selected-${index}" ${result.matched && result.selected ? 'checked' : ''} ${result.matched ? '' : 'disabled'} aria-label="选择 ${escapeHtml(result.name)}" />
+              <div class="ai-result-copy"><strong>${escapeHtml(result.name)}</strong><small>${escapeHtml(result.matched ? result.address : '未找到坐标，请改用手动添加')}</small></div>
+              <span class="ai-match-status">${result.matched ? '已匹配' : '待确认'}</span>
+            </article>`).join('')}
+          <button class="primary-button" type="submit" ${matchedCount ? '' : 'disabled'}>批量加入地图（${matchedCount}）</button>
+        </form>` : ''}
+    </section>`;
 }
 
 function addPlaceSheet() {
@@ -306,23 +366,24 @@ function addPlaceSheet() {
     <div class="overlay" data-close-overlay></div>
     <aside class="form-sheet add-place-sheet">
       <div class="sheet-handle"><span></span></div>
-      <div class="section-title add-place-title"><div><span class="kicker">ADD A PLACE</span><h2>添加地点</h2></div><button class="drawer-close" data-close-overlay>×</button></div>
-      <div class="add-mode-tabs" role="tablist">
-        <button class="${state.addPlaceMode === 'search' ? 'active' : ''}" data-add-mode="search">搜索真实地点</button>
-        <button class="${state.addPlaceMode === 'manual' ? 'active' : ''}" data-add-mode="manual">手动添加</button>
-      </div>
-      <label class="add-day-select">加入哪一天<select id="add-place-day">${localDays.map((day, index) => `<option value="${day.number}" ${day.number === Number(targetDayNumber) ? 'selected' : ''}>第 ${index + 1} 天 · ${day.label.split(' · ')[0]}</option>`).join('')}</select></label>
-      ${state.addPlaceMode === 'search' ? `
+      <div class="section-title add-place-title"><div><span class="kicker">ADD A PLACE</span><h2>${state.repairPlace ? '修复地点' : '添加地点'}</h2></div><button class="drawer-close" data-close-overlay>×</button></div>
+      ${state.repairPlace ? `<div class="repair-context"><span>正在修复</span><strong>${escapeHtml(state.repairPlace.name)}</strong><small>重新搜索并确认准确地点，原来的日期会保留。</small></div>` : `
+        <div class="add-mode-tabs" role="tablist">
+          <button class="${state.addPlaceMode === 'manual' ? 'active' : ''}" data-add-mode="manual">手动添加</button>
+          <button class="${state.addPlaceMode === 'ai' ? 'active' : ''}" data-add-mode="ai">AI 识别</button>
+        </div>`}
+      <label class="add-day-select">${state.repairPlace ? '所在日期' : '加入哪一天'}<select id="add-place-day" ${state.repairPlace ? 'disabled' : ''}>${localDays.map((day, index) => `<option value="${day.number}" ${day.number === Number(targetDayNumber) ? 'selected' : ''}>第 ${index + 1} 天 · ${day.label.split(' · ')[0]}</option>`).join('')}</select></label>
+      ${state.addPlaceMode === 'manual' || state.repairPlace ? `
         <div class="place-search-wrap">
-          <label>搜索地点<input id="place-search-input" value="${escapeHtml(state.placeSearchQuery)}" placeholder="输入关键词，如：锡耶纳大" autocomplete="off" /></label>
-          <p class="search-helper">连接 OpenStreetMap 地点搜索；输入两个字以上会自动匹配。</p>
+          <label>搜索地点<input id="place-search-input" value="${escapeHtml(state.placeSearchQuery)}" placeholder="输入名称或关键词，如：锡耶纳大" autocomplete="off" /></label>
+          <p class="search-helper">先搜索并选择真实地点，再补充类别、时间和备注。</p>
           <div class="search-status">${escapeHtml(state.placeSearchStatus)}</div>
           <div class="search-results">
             ${state.placeSearchResults.map((result, index) => `<button data-place-result="${index}"><img src="${placeIcons.sight}" alt="" /><span><strong>${escapeHtml(result.name)}</strong><small>${escapeHtml(result.address)}</small></span></button>`).join('')}
           </div>
         </div>
-        ${selected ? `<div class="selected-search-place"><span>已选择</span><strong>${escapeHtml(selected.name)}</strong><small>${escapeHtml(selected.address)}</small></div>${placeDetailsForm({ name: selected.name, note: selected.address })}` : ''}
-      ` : placeDetailsForm({ isManual: true })}
+        ${selected ? `<div class="selected-search-place"><span>已选择真实地点</span><strong>${escapeHtml(selected.name)}</strong><small>${escapeHtml(selected.address)}</small></div>${placeDetailsForm({ name: selected.name, note: state.repairPlace?.note || '' })}` : ''}
+      ` : aiImportPanel()}
     </aside>`;
 }
 
@@ -442,7 +503,7 @@ async function searchPlaces(query) {
   days.forEach((day) => day.items.forEach((item) => {
     const searchableName = `${item.name}${item.shortName || ''}`.toLocaleLowerCase().replace(/\s+/g, '');
     const key = `${item.name}-${item.coords?.join(',')}`;
-    if (searchableName.includes(normalizedKeyword) && !seenLocal.has(key)) {
+    if (item.locationStatus !== 'missing' && searchableName.includes(normalizedKeyword) && !seenLocal.has(key)) {
       seenLocal.add(key);
       localResults.push({ name: item.name, address: `喵游地点库 · D${day.number} ${day.label}${item.note ? ` · ${item.note}` : ''}`, coords: item.coords.map(Number) });
     }
@@ -466,32 +527,181 @@ async function searchPlaces(query) {
     render();
   } catch (error) {
     if (error.name === 'AbortError') return;
-    state.placeSearchResults = [];
-    state.placeSearchStatus = '地点搜索暂时不可用，可切换到“手动添加”';
+    state.placeSearchResults = localResults.slice(0, 4);
+    state.placeSearchStatus = localResults.length ? '已显示行程地点库结果；在线搜索暂时不可用' : '在线地点搜索暂时不可用，请稍后重试';
+    render();
+  }
+}
+
+function updateAIStatus(message) {
+  state.aiStatus = message;
+  const status = document.querySelector('.ai-status');
+  if (status) status.textContent = message;
+}
+
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-tesseract]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.Tesseract), { once: true });
+      existing.addEventListener('error', reject, { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    script.crossOrigin = 'anonymous';
+    script.dataset.tesseract = 'true';
+    script.onload = () => resolve(window.Tesseract);
+    script.onerror = reject;
+    document.head.append(script);
+  });
+}
+
+function extractPlaceCandidates(text) {
+  const candidates = [];
+  const seen = new Set();
+  const add = (name, query = name) => {
+    const cleanedName = String(name).replace(/^[\d\s.、·:：-]+|[\s:：,，。；;]+$/g, '').trim();
+    const cleanedQuery = String(query).replace(/[（(][^）)]*[）)]/g, '').trim();
+    if (cleanedName.length < 2 || cleanedName.length > 48 || /^(行程|时间|路线|出发|回程|午餐|晚餐|景点|安排|亮点)/.test(cleanedName)) return;
+    const key = cleanedName.toLocaleLowerCase().replace(/\s+/g, '');
+    if (seen.has(key)) return;
+    seen.add(key);
+    candidates.push({ name: cleanedName, query: cleanedQuery || cleanedName });
+  };
+
+  const bilingual = /([\u3400-\u9fff]{2,16})\s*[（(]([A-Za-z][A-Za-z\s.'’\-]{2,48})[）)]/g;
+  for (const match of text.matchAll(bilingual)) add(match[1], match[2]);
+
+  text.split(/\n+/).forEach((line) => {
+    const normalized = line.replace(/[🏡🏰🌹🌾🌳⏰🕰️👉👇❤️🍕🍷]/gu, ' ').trim();
+    const numbered = normalized.match(/^\s*\d+[.、]\s*(.+)$/);
+    if (!numbered) return;
+    numbered[1].split(/\s*[-→]\s*/).forEach((segment) => {
+      const candidate = segment
+        .replace(/[（(][^）)]*[）)]/g, '')
+        .split(/路程|游玩|拍照|打卡|时间|约\s*\d/)[0]
+        .trim();
+      if (/教堂|广场|宫|馆|公园|农庄|Farmhouse|Poggio|Siena|Pienza|Firenze/i.test(candidate)) add(candidate);
+    });
+  });
+  return candidates.slice(0, 8);
+}
+
+async function geocodeAIPlace(candidate) {
+  try {
+    const params = new URLSearchParams({ format: 'jsonv2', limit: '1', 'accept-language': 'zh-CN', countrycodes: 'it,fr,es', q: candidate.query });
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const [result] = await response.json();
+    if (!result) return { ...candidate, matched: false, selected: false };
+    return {
+      ...candidate,
+      name: candidate.name || result.name || result.display_name.split(',')[0],
+      address: result.display_name,
+      coords: [Number(result.lat), Number(result.lon)],
+      matched: true,
+      selected: true
+    };
+  } catch {
+    return { ...candidate, matched: false, selected: false };
+  }
+}
+
+async function recognizeAIImage() {
+  if (!state.aiImageFile || state.aiWorking) return;
+  state.aiWorking = true;
+  state.aiResults = [];
+  updateAIStatus('正在载入本地文字识别模型…');
+  render();
+  let worker;
+  try {
+    const Tesseract = await loadTesseract();
+    worker = await Tesseract.createWorker('chi_sim+eng', 1, {
+      logger: (progress) => {
+        if (progress.status === 'recognizing text') updateAIStatus(`正在识别截图文字 ${Math.round((progress.progress || 0) * 100)}%`);
+      }
+    });
+    const result = await worker.recognize(state.aiImageFile);
+    state.aiRecognizedText = result.data.text || '';
+    const candidates = extractPlaceCandidates(state.aiRecognizedText);
+    if (!candidates.length) {
+      state.aiStatus = '没有识别到明确地点，请换一张文字更清晰的截图';
+      return;
+    }
+    const matched = [];
+    for (let index = 0; index < candidates.length; index += 1) {
+      updateAIStatus(`正在匹配地图坐标 ${index + 1}/${candidates.length}`);
+      matched.push(await geocodeAIPlace(candidates[index]));
+    }
+    state.aiResults = matched;
+    state.aiStatus = `识别到 ${matched.length} 个地点，请确认后批量添加`;
+  } catch (error) {
+    state.aiStatus = 'AI 识别模型加载失败，请检查网络后重试';
+  } finally {
+    await worker?.terminate();
+    state.aiWorking = false;
     render();
   }
 }
 
 function addPlaceFromForm(formElement) {
   const form = new FormData(formElement);
-  const targetDay = getDay(state.addDayNumber);
+  const repairPlace = state.repairPlace;
+  const targetDay = getDay(repairPlace?._dayNumber || state.addDayNumber);
   if (!targetDay) return;
-  const manual = formElement.dataset.manual === 'true';
-  const coords = manual
-    ? state.manualMapCenter || cityById(state.cityId).center
-    : state.selectedSearchResult?.coords;
+  const coords = state.selectedSearchResult?.coords;
   if (!coords) return;
   const name = String(form.get('placeName')).trim();
-  targetDay.items.push({
-    id: `user-place-${Date.now()}`,
+  const updatedFields = {
     name,
     shortName: name,
     type: form.get('type'),
     coords: coords.map(Number),
     time: form.get('time'),
     note: String(form.get('note') || '').trim(),
-    userAdded: true
-  });
+    address: state.selectedSearchResult.address,
+    locationStatus: 'verified'
+  };
+  if (repairPlace) {
+    const index = findPlaceIndex(targetDay, repairPlace);
+    if (index < 0) return;
+    targetDay.items[index] = { ...targetDay.items[index], ...updatedFields };
+    const repaired = placeWithDay(targetDay.items[index], targetDay.number);
+    persistItinerary();
+    resetAddPlace();
+    state.selectedPlace = repaired;
+    render();
+    return;
+  }
+  targetDay.items.push({ id: `user-place-${Date.now()}`, ...updatedFields, userAdded: true });
+  persistItinerary();
+  state.dayFilter = String(targetDay.number);
+  state.category = 'all';
+  resetAddPlace();
+  render();
+}
+
+function importAIResults(formElement) {
+  const targetDay = getDay(state.addDayNumber);
+  if (!targetDay) return;
+  const form = new FormData(formElement);
+  const selected = state.aiResults.filter((result, index) => result.matched && form.has(`selected-${index}`));
+  selected.forEach((result, index) => targetDay.items.push({
+    id: `ai-place-${Date.now()}-${index}`,
+    name: result.name,
+    shortName: result.name,
+    type: 'sight',
+    coords: result.coords.map(Number),
+    time: `${String(12 + Math.floor(index / 2)).padStart(2, '0')}:${index % 2 ? '30' : '00'}`,
+    note: 'AI 从旅行截图识别 · 请确认开放时间',
+    address: result.address,
+    locationStatus: 'verified',
+    userAdded: true,
+    aiImported: true
+  }));
+  if (!selected.length) return;
   persistItinerary();
   state.dayFilter = String(targetDay.number);
   state.category = 'all';
@@ -504,17 +714,43 @@ function moveSelectedPlace(targetDayNumber) {
   const sourceDay = getDay(place?._dayNumber);
   const targetDay = getDay(targetDayNumber);
   if (!place || !sourceDay || !targetDay || sourceDay.number === targetDay.number) return;
-  const index = sourceDay.items.findIndex((item) => (
-    place.id
-      ? item.id === place.id
-      : item.name === place.name && item.coords?.join(',') === place.coords?.join(',')
-  ));
+  const index = findPlaceIndex(sourceDay, place);
   if (index < 0) return;
   const [movedPlace] = sourceDay.items.splice(index, 1);
   targetDay.items.push(movedPlace);
   persistItinerary();
   state.dayFilter = String(targetDay.number);
   state.selectedPlace = placeWithDay(movedPlace, targetDay.number);
+  render();
+}
+
+function beginRepairSelectedPlace() {
+  const place = state.selectedPlace;
+  if (!place) return;
+  state.repairPlace = place;
+  state.addDayNumber = place._dayNumber;
+  state.addPlaceMode = 'manual';
+  state.placeSearchQuery = place.name;
+  state.placeSearchResults = [];
+  state.placeSearchStatus = '正在查找原地点…';
+  state.selectedSearchResult = null;
+  state.selectedPlace = null;
+  state.deletePlaceArmed = false;
+  state.showAddPlace = true;
+  render();
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => searchPlaces(place.name), 60);
+}
+
+function deleteSelectedPlace() {
+  const place = state.selectedPlace;
+  const sourceDay = getDay(place?._dayNumber);
+  const index = findPlaceIndex(sourceDay, place);
+  if (!place || !sourceDay || index < 0) return;
+  sourceDay.items.splice(index, 1);
+  persistItinerary();
+  state.selectedPlace = null;
+  state.deletePlaceArmed = false;
   render();
 }
 
@@ -533,6 +769,7 @@ function bindEvents() {
   document.querySelectorAll('[data-open-tickets]').forEach((button) => button.addEventListener('click', () => { state.showTickets = true; render(); }));
   document.querySelectorAll('[data-close-overlay]').forEach((button) => button.addEventListener('click', () => {
     state.selectedPlace = null;
+    state.deletePlaceArmed = false;
     state.showTickets = false;
     state.showExpenseForm = false;
     searchController?.abort();
@@ -545,10 +782,8 @@ function bindEvents() {
   }));
   document.querySelectorAll('[data-add-place]').forEach((button) => button.addEventListener('click', () => {
     const localDays = cityDays(state.cityId);
-    const center = map?.getCenter();
-    state.manualMapCenter = center ? [center.lat, center.lng] : cityById(state.cityId).center;
     state.addDayNumber = state.dayFilter === 'all' ? localDays[0].number : Number(state.dayFilter);
-    state.addPlaceMode = 'search';
+    state.addPlaceMode = 'manual';
     state.showAddPlace = true;
     render();
   }));
@@ -559,6 +794,11 @@ function bindEvents() {
     state.placeSearchStatus = '';
     render();
   }));
+  document.querySelector('[data-repair-place]')?.addEventListener('click', beginRepairSelectedPlace);
+  document.querySelector('[data-delete-place]')?.addEventListener('click', () => {
+    if (state.deletePlaceArmed) deleteSelectedPlace();
+    else { state.deletePlaceArmed = true; render(); }
+  });
   document.querySelector('#add-place-day')?.addEventListener('change', (event) => { state.addDayNumber = Number(event.target.value); render(); });
   document.querySelector('#place-search-input')?.addEventListener('input', (event) => {
     state.placeSearchQuery = event.target.value;
@@ -572,6 +812,22 @@ function bindEvents() {
     render();
   }));
   document.querySelector('#add-place-form')?.addEventListener('submit', (event) => { event.preventDefault(); addPlaceFromForm(event.currentTarget); });
+  document.querySelector('#ai-image-input')?.addEventListener('change', (event) => {
+    const [file] = event.target.files;
+    if (!file) return;
+    if (state.aiImageUrl) URL.revokeObjectURL(state.aiImageUrl);
+    state.aiImageFile = file;
+    state.aiImageUrl = URL.createObjectURL(file);
+    state.aiResults = [];
+    state.aiStatus = '截图已就绪，可以开始识别';
+    render();
+  });
+  document.querySelector('[data-run-ai]')?.addEventListener('click', recognizeAIImage);
+  document.querySelector('[data-ai-select-all]')?.addEventListener('click', () => {
+    state.aiResults = state.aiResults.map((result) => ({ ...result, selected: result.matched }));
+    render();
+  });
+  document.querySelector('#ai-results-form')?.addEventListener('submit', (event) => { event.preventDefault(); importAIResults(event.currentTarget); });
   document.querySelector('#move-place-day')?.addEventListener('change', (event) => moveSelectedPlace(Number(event.target.value)));
   document.querySelectorAll('[data-add-expense]').forEach((button) => button.addEventListener('click', () => { state.showExpenseForm = true; render(); }));
   document.querySelector('#expense-form')?.addEventListener('submit', (event) => {
