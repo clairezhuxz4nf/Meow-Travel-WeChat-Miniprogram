@@ -28,6 +28,8 @@ const typeIcons = { sight: '📍', food: '🍴', shopping: '🛍', hotel: 'M', t
 const tabCats = { today: catReminder, trip: catTraveler, expenses: catExpenses };
 const placeIcons = { all: iconScenic, sight: iconScenic, food: iconFood, shopping: iconShopping, hotel: iconHotel, transport: iconTransport };
 const numberedPins = [pinOne, pinTwo, pinThree];
+const citySearchNames = { rome: 'Rome', florence: 'Florence', barcelona: 'Barcelona', paris: 'Paris' };
+const cityCountryCodes = { rome: 'it', florence: 'it', barcelona: 'es', paris: 'fr' };
 const itineraryStorageKey = 'miaoyou-itinerary-v2';
 
 const savedExpenses = JSON.parse(localStorage.getItem('miaoyou-expenses') || 'null');
@@ -512,7 +514,16 @@ async function searchPlaces(query) {
   state.placeSearchStatus = localResults.length ? '已从行程地点库匹配，正在查找更多…' : '正在匹配地点…';
   render();
   try {
-    const params = new URLSearchParams({ format: 'jsonv2', limit: '6', 'accept-language': 'zh-CN', countrycodes: 'it,fr,es', q: keyword });
+    const city = cityById(state.cityId);
+    const [latitude, longitude] = city.center;
+    const params = new URLSearchParams({
+      format: 'jsonv2',
+      limit: '6',
+      'accept-language': 'zh-CN',
+      countrycodes: cityCountryCodes[city.id],
+      q: `${keyword}, ${citySearchNames[city.id]}`,
+      viewbox: `${longitude - 1.5},${latitude + 1.5},${longitude + 1.5},${latitude - 1.5}`
+    });
     const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, { signal: searchController.signal });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const results = await response.json();
