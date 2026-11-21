@@ -31,6 +31,7 @@ const numberedPins = [pinOne, pinTwo, pinThree];
 const citySearchNames = { rome: 'Rome', florence: 'Florence', barcelona: 'Barcelona', paris: 'Paris' };
 const cityCountryCodes = { rome: 'it', florence: 'it', barcelona: 'es', paris: 'fr' };
 const itineraryStorageKey = 'miaoyou-itinerary-v2';
+const aiPlacesEndpoint = import.meta.env.VITE_AI_PLACES_ENDPOINT || '/api/ai/places';
 
 const savedExpenses = JSON.parse(localStorage.getItem('miaoyou-expenses') || 'null');
 const savedItinerary = JSON.parse(localStorage.getItem(itineraryStorageKey) || 'null');
@@ -63,7 +64,6 @@ const state = {
   deletePlaceArmed: false,
   aiImageFile: null,
   aiImageUrl: '',
-  aiRecognizedText: '',
   aiStatus: '',
   aiResults: [],
   aiWorking: false,
@@ -115,7 +115,6 @@ function resetAddPlace() {
   state.placeSearchStatus = '';
   state.selectedSearchResult = null;
   state.repairPlace = null;
-  state.aiRecognizedText = '';
   state.aiStatus = '';
   state.aiResults = [];
   state.aiWorking = false;
@@ -342,8 +341,8 @@ function aiImportPanel() {
         <input id="ai-image-input" type="file" accept="image/png,image/jpeg,image/webp" />
         ${state.aiImageUrl ? `<img src="${state.aiImageUrl}" alt="待识别的旅行截图" />` : '<span class="ai-upload-icon">▧</span><strong>上传旅行截图</strong><small>支持小红书、攻略笔记或聊天截图</small>'}
       </label>
-      <p class="ai-privacy">图片仅在浏览器内识别；识别出的地点名称会发送到 OpenStreetMap 匹配坐标。</p>
-      <button class="primary-button" type="button" data-run-ai ${!state.aiImageFile || state.aiWorking ? 'disabled' : ''}>${state.aiWorking ? '正在识别与匹配…' : '识别截图中的地点'}</button>
+      <p class="ai-privacy"><strong>GPT 图片识别</strong> · 截图会发送到喵游的 AI 服务，API Key 只保存在服务端；地点名称会再通过 OpenStreetMap 校验坐标。</p>
+      <button class="primary-button" type="button" data-run-ai ${!state.aiImageFile || state.aiWorking ? 'disabled' : ''}>${state.aiWorking ? 'AI 正在理解截图…' : '用 AI 识别地点'}</button>
       <div class="ai-status" aria-live="polite">${escapeHtml(state.aiStatus)}</div>
       ${state.aiResults.length ? `
         <div class="ai-results-head"><div><strong>识别结果</strong><span>${matchedCount}/${state.aiResults.length} 个已匹配坐标</span></div><button type="button" data-ai-select-all>全选已匹配</button></div>
@@ -550,59 +549,62 @@ function updateAIStatus(message) {
   if (status) status.textContent = message;
 }
 
-function loadTesseract() {
-  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
-    const existing = document.querySelector('script[data-tesseract]');
-    if (existing) {
-      existing.addEventListener('load', () => resolve(window.Tesseract), { once: true });
-      existing.addEventListener('error', reject, { once: true });
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-    script.crossOrigin = 'anonymous';
-    script.dataset.tesseract = 'true';
-    script.onload = () => resolve(window.Tesseract);
-    script.onerror = reject;
-    document.head.append(script);
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
   });
 }
 
-function extractPlaceCandidates(text) {
-  const candidates = [];
-  const seen = new Set();
-  const add = (name, query = name) => {
-    const cleanedName = String(name).replace(/^[\d\s.、·:：-]+|[\s:：,，。；;]+$/g, '').trim();
-    const cleanedQuery = String(query).replace(/[（(][^）)]*[）)]/g, '').trim();
-    if (cleanedName.length < 2 || cleanedName.length > 48 || /^(行程|时间|路线|出发|回程|午餐|晚餐|景点|安排|亮点)/.test(cleanedName)) return;
-    const key = cleanedName.toLocaleLowerCase().replace(/\s+/g, '');
-    if (seen.has(key)) return;
-    seen.add(key);
-    candidates.push({ name: cleanedName, query: cleanedQuery || cleanedName });
-  };
+async function prepareImageForAI(file) {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const maxSide = 1600;
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    return canvas.toDataURL('image/jpeg', 0.82);
+  } catch {
+    return fileToDataUrl(file);
+  }
+}
 
-  const bilingual = /([\u3400-\u9fff]{2,16})\s*[（(]([A-Za-z][A-Za-z\s.'’\-]{2,48})[）)]/g;
-  for (const match of text.matchAll(bilingual)) add(match[1], match[2]);
-
-  text.split(/\n+/).forEach((line) => {
-    const normalized = line.replace(/[🏡🏰🌹🌾🌳⏰🕰️👉👇❤️🍕🍷]/gu, ' ').trim();
-    const numbered = normalized.match(/^\s*\d+[.、]\s*(.+)$/);
-    if (!numbered) return;
-    numbered[1].split(/\s*[-→]\s*/).forEach((segment) => {
-      const candidate = segment
-        .replace(/[（(][^）)]*[）)]/g, '')
-        .split(/路程|游玩|拍照|打卡|时间|约\s*\d/)[0]
-        .trim();
-      if (/教堂|广场|宫|馆|公园|农庄|Farmhouse|Poggio|Siena|Pienza|Firenze/i.test(candidate)) add(candidate);
-    });
+async function identifyPlacesWithAI(file) {
+  const city = cityById(state.cityId);
+  const response = await fetch(aiPlacesEndpoint, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      imageDataUrl: await prepareImageForAI(file),
+      cityName: citySearchNames[city?.id] || city?.name || '',
+      countryCode: cityCountryCodes[city?.id] || ''
+    })
   });
-  return candidates.slice(0, 8);
+  const contentType = response.headers.get('content-type') || '';
+  const payload = contentType.includes('application/json') ? await response.json() : {};
+  if (!response.ok) {
+    const error = new Error(payload.error || `AI 服务返回 ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  return Array.isArray(payload.places) ? payload.places : [];
 }
 
 async function geocodeAIPlace(candidate) {
   try {
-    const params = new URLSearchParams({ format: 'jsonv2', limit: '1', 'accept-language': 'zh-CN', countrycodes: 'it,fr,es', q: candidate.query });
+    const city = cityById(state.cityId);
+    const params = new URLSearchParams({
+      format: 'jsonv2',
+      limit: '1',
+      'accept-language': 'zh-CN',
+      countrycodes: cityCountryCodes[city?.id] || 'it,fr,es',
+      q: candidate.query
+    });
     const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const [result] = await response.json();
@@ -622,23 +624,15 @@ async function geocodeAIPlace(candidate) {
 
 async function recognizeAIImage() {
   if (!state.aiImageFile || state.aiWorking) return;
+  const imageFile = state.aiImageFile;
   state.aiWorking = true;
   state.aiResults = [];
-  updateAIStatus('正在载入本地文字识别模型…');
+  updateAIStatus('正在安全上传截图并识别地点…');
   render();
-  let worker;
   try {
-    const Tesseract = await loadTesseract();
-    worker = await Tesseract.createWorker('chi_sim+eng', 1, {
-      logger: (progress) => {
-        if (progress.status === 'recognizing text') updateAIStatus(`正在识别截图文字 ${Math.round((progress.progress || 0) * 100)}%`);
-      }
-    });
-    const result = await worker.recognize(state.aiImageFile);
-    state.aiRecognizedText = result.data.text || '';
-    const candidates = extractPlaceCandidates(state.aiRecognizedText);
+    const candidates = await identifyPlacesWithAI(imageFile);
     if (!candidates.length) {
-      state.aiStatus = '没有识别到明确地点，请换一张文字更清晰的截图';
+      state.aiStatus = 'AI 没有识别到明确地点，请换一张内容更清晰的截图';
       return;
     }
     const matched = [];
@@ -647,11 +641,16 @@ async function recognizeAIImage() {
       matched.push(await geocodeAIPlace(candidates[index]));
     }
     state.aiResults = matched;
-    state.aiStatus = `识别到 ${matched.length} 个地点，请确认后批量添加`;
+    state.aiStatus = `AI 识别到 ${matched.length} 个地点，请确认坐标后批量添加`;
   } catch (error) {
-    state.aiStatus = 'AI 识别模型加载失败，请检查网络后重试';
+    if (error.status === 503 || error.status === 404) {
+      state.aiStatus = 'AI 服务尚未连接：请先在服务端配置 OPENAI_API_KEY';
+    } else if (/quota|billing|credit/i.test(error.message)) {
+      state.aiStatus = 'AI 账户额度不足，请检查 OpenAI API 账单或额度';
+    } else {
+      state.aiStatus = `AI 识别失败：${error.message || '请稍后重试'}`;
+    }
   } finally {
-    await worker?.terminate();
     state.aiWorking = false;
     render();
   }
@@ -703,10 +702,10 @@ function importAIResults(formElement) {
     id: `ai-place-${Date.now()}-${index}`,
     name: result.name,
     shortName: result.name,
-    type: 'sight',
+    type: result.type || 'sight',
     coords: result.coords.map(Number),
     time: `${String(12 + Math.floor(index / 2)).padStart(2, '0')}:${index % 2 ? '30' : '00'}`,
-    note: 'AI 从旅行截图识别 · 请确认开放时间',
+    note: result.note || 'AI 从旅行截图识别 · 请确认开放时间',
     address: result.address,
     locationStatus: 'verified',
     userAdded: true,

@@ -1,0 +1,8 @@
+name = "miaoyou-ai-places"
+main = "ai-places-worker.js"
+compatibility_date = "2026-11-21"
+
+[vars]
+OPENAI_MODEL = "gpt-6-luna"
+# Set ALLOWED_ORIGIN to the deployed web app origin before publishing.
+# Store OPENAI_API_KEY with: npx wrangler secret put OPENAI_API_KEY
