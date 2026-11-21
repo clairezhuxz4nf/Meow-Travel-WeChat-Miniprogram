@@ -30,6 +30,12 @@ const placeIcons = { all: iconScenic, sight: iconScenic, food: iconFood, shoppin
 const numberedPins = [pinOne, pinTwo, pinThree];
 
 const savedExpenses = JSON.parse(localStorage.getItem('miaoyou-expenses') || 'null');
+const savedItinerary = JSON.parse(localStorage.getItem('miaoyou-itinerary') || 'null');
+if (savedItinerary) {
+  days.forEach((day) => {
+    if (Array.isArray(savedItinerary[day.number])) day.items = savedItinerary[day.number];
+  });
+}
 const state = {
   tab: location.hash.replace('#', '') || 'today',
   todayDay: 1,
@@ -39,12 +45,22 @@ const state = {
   selectedPlace: null,
   showTickets: false,
   showExpenseForm: false,
+  showAddPlace: false,
+  addPlaceMode: 'search',
+  addDayNumber: null,
+  placeSearchQuery: '',
+  placeSearchResults: [],
+  placeSearchStatus: '',
+  selectedSearchResult: null,
+  manualMapCenter: null,
   sheetExpanded: false,
   expenses: savedExpenses || expenseSeed
 };
 
 let map;
 let mapLayer;
+let searchTimer;
+let searchController;
 
 function cityById(id) {
   return trip.cities.find((city) => city.id === id);
@@ -66,6 +82,26 @@ function googleMapsUrl(place) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name} ${place.coords.join(',')}`)}`;
 }
 
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
+}
+
+function persistItinerary() {
+  localStorage.setItem('miaoyou-itinerary', JSON.stringify(Object.fromEntries(days.map((day) => [day.number, day.items]))));
+}
+
+function placeWithDay(place, dayNumber) {
+  return { ...place, _dayNumber: Number(dayNumber) };
+}
+
+function resetAddPlace() {
+  state.showAddPlace = false;
+  state.placeSearchQuery = '';
+  state.placeSearchResults = [];
+  state.placeSearchStatus = '';
+  state.selectedSearchResult = null;
+}
+
 function shell(content) {
   return `
     <div class="paper-noise"></div>
@@ -83,6 +119,7 @@ function shell(content) {
     ${state.selectedPlace ? placeDrawer(state.selectedPlace) : ''}
     ${state.showTickets ? ticketWallet() : ''}
     ${state.showExpenseForm ? expenseForm() : ''}
+    ${state.showAddPlace ? addPlaceSheet() : ''}
   `;
 }
 
@@ -161,7 +198,7 @@ function tripView() {
           <span class="back-doodle">‹</span>
           <label><span class="sr-only">选择城市</span><select id="city-select">${trip.cities.map((c) => `<option value="${c.id}" ${c.id === city.id ? 'selected' : ''}>${c.name} · ${cityDays(c.id).length}天</option>`).join('')}</select></label>
         </div>
-        <div class="map-actions"><label class="day-dropdown"><span class="sr-only">选择日期</span><select id="day-filter"><option value="all">全部日期</option>${localDays.map((d, i) => `<option value="${d.number}" ${String(d.number) === String(state.dayFilter) ? 'selected' : ''}>第 ${i + 1} 天 · ${d.label.split(' · ')[0]}</option>`).join('')}</select></label><span class="mini-program-pill">•••　◉</span></div>
+        <div class="map-actions"><label class="day-dropdown"><span class="sr-only">选择日期</span><select id="day-filter"><option value="all">全部日期</option>${localDays.map((d, i) => `<option value="${d.number}" ${String(d.number) === String(state.dayFilter) ? 'selected' : ''}>第 ${i + 1} 天 · ${d.label.split(' · ')[0]}</option>`).join('')}</select></label><button class="add-place-button" data-add-place aria-label="添加地点">＋</button></div>
       </header>
       <div class="category-strip" aria-label="地点分类">
         ${categories.map((category) => `<button class="category-chip ${state.category === category.id ? 'active' : ''}" data-category="${category.id}"><img src="${placeIcons[category.id]}" alt="" />${category.label}</button>`).join('')}
@@ -215,6 +252,8 @@ function expensesView() {
 }
 
 function placeDrawer(place) {
+  const sourceDay = getDay(place._dayNumber);
+  const movableDays = sourceDay ? cityDays(sourceDay.cityId) : [];
   return `
     <div class="overlay" data-close-overlay></div>
     <aside class="place-drawer">
@@ -224,6 +263,7 @@ function placeDrawer(place) {
       <h2>${place.name}</h2>
       <p>${place.note || '已加入这次旅行的地点清单。'}</p>
       <div class="detail-meta"><span>🕒 ${place.time}</span>${place.ticket ? `<span>🎫 ${place.ticket.label} · ${place.ticket.price}</span>` : ''}</div>
+      ${sourceDay ? `<label class="move-day-control"><span>调整到其他日期</span><select id="move-place-day">${movableDays.map((day, index) => `<option value="${day.number}" ${day.number === sourceDay.number ? 'selected' : ''}>第 ${index + 1} 天 · ${day.label.split(' · ')[0]}</option>`).join('')}</select></label>` : ''}
       <a class="primary-button" href="${googleMapsUrl(place)}" target="_blank" rel="noreferrer">在 Google Maps 打开</a>
     </aside>`;
 }
@@ -238,6 +278,50 @@ function ticketWallet() {
       <div class="ticket-stack">
         ${tickets.length ? tickets.map((item, index) => `<article class="ticket-card ${item.ticket.status}"><div class="ticket-top"><span>${item.ticket.status === 'confirmed' ? '✓ READY' : 'TO BUY'}</span><small>D${day.number} · ${item.time}</small></div><h3>${item.shortName}</h3><p>${item.ticket.label} · ${item.ticket.price}</p><div class="fake-code">${Array.from({ length: 28 }, (_, i) => `<i style="height:${10 + (i * 7) % 22}px"></i>`).join('')}</div></article>`).join('') : `<div class="empty-state"><img src="${catSuitcase}" alt="提着行李箱的喵游猫" /><h3>今天没有需要出示的票</h3><p>轻装上阵，去散步吧。</p></div>`}
       </div>
+    </aside>`;
+}
+
+function placeDetailsForm({ name = '', note = '', isManual = false } = {}) {
+  const targetDay = getDay(state.addDayNumber);
+  return `
+    <form id="add-place-form" class="place-details-form" data-manual="${isManual}">
+      <label>地点名称<input name="placeName" required value="${escapeHtml(name)}" placeholder="例如：锡耶纳大教堂" /></label>
+      <div class="form-row">
+        <label>类别<select name="type">${categories.filter((category) => category.id !== 'all').map((category) => `<option value="${category.id}">${category.label}</option>`).join('')}</select></label>
+        <label>时间<input name="time" type="time" value="12:00" required /></label>
+      </div>
+      <label>备注<input name="note" value="${escapeHtml(note)}" placeholder="预约信息、想看的重点……" /></label>
+      ${isManual ? '<p class="map-center-note">将使用你打开“＋”时地图中心点的位置；添加后可以拖动地图核对。</p>' : ''}
+      <button class="primary-button" type="submit">加入${targetDay ? `第 ${cityDays(targetDay.cityId).findIndex((day) => day.number === targetDay.number) + 1} 天` : '当天'}行程</button>
+    </form>`;
+}
+
+function addPlaceSheet() {
+  const localDays = cityDays(state.cityId);
+  const targetDayNumber = state.addDayNumber || (state.dayFilter === 'all' ? localDays[0]?.number : Number(state.dayFilter));
+  state.addDayNumber = targetDayNumber;
+  const selected = state.selectedSearchResult;
+  return `
+    <div class="overlay" data-close-overlay></div>
+    <aside class="form-sheet add-place-sheet">
+      <div class="sheet-handle"><span></span></div>
+      <div class="section-title add-place-title"><div><span class="kicker">ADD A PLACE</span><h2>添加地点</h2></div><button class="drawer-close" data-close-overlay>×</button></div>
+      <div class="add-mode-tabs" role="tablist">
+        <button class="${state.addPlaceMode === 'search' ? 'active' : ''}" data-add-mode="search">搜索真实地点</button>
+        <button class="${state.addPlaceMode === 'manual' ? 'active' : ''}" data-add-mode="manual">手动添加</button>
+      </div>
+      <label class="add-day-select">加入哪一天<select id="add-place-day">${localDays.map((day, index) => `<option value="${day.number}" ${day.number === Number(targetDayNumber) ? 'selected' : ''}>第 ${index + 1} 天 · ${day.label.split(' · ')[0]}</option>`).join('')}</select></label>
+      ${state.addPlaceMode === 'search' ? `
+        <div class="place-search-wrap">
+          <label>搜索地点<input id="place-search-input" value="${escapeHtml(state.placeSearchQuery)}" placeholder="输入关键词，如：锡耶纳大" autocomplete="off" /></label>
+          <p class="search-helper">连接 OpenStreetMap 地点搜索；输入两个字以上会自动匹配。</p>
+          <div class="search-status">${escapeHtml(state.placeSearchStatus)}</div>
+          <div class="search-results">
+            ${state.placeSearchResults.map((result, index) => `<button data-place-result="${index}"><img src="${placeIcons.sight}" alt="" /><span><strong>${escapeHtml(result.name)}</strong><small>${escapeHtml(result.address)}</small></span></button>`).join('')}
+          </div>
+        </div>
+        ${selected ? `<div class="selected-search-place"><span>已选择</span><strong>${escapeHtml(selected.name)}</strong><small>${escapeHtml(selected.address)}</small></div>${placeDetailsForm({ name: selected.name, note: selected.address })}` : ''}
+      ` : placeDetailsForm({ isManual: true })}
     </aside>`;
 }
 
@@ -309,7 +393,7 @@ function setupMap(container, city, controls) {
 
 function addMarker(item, dayNumber, active) {
   const marker = L.marker(item.coords, { icon: createMarkerIcon(item, dayNumber, active), opacity: active ? 1 : .72 }).addTo(mapLayer);
-  marker.on('click', () => { state.selectedPlace = item; render(); });
+  marker.on('click', () => { state.selectedPlace = placeWithDay(item, dayNumber); render(); });
 }
 
 function addRoute(items) {
@@ -325,6 +409,110 @@ function resolvePlace(dayNumber, index) {
   return getDay(dayNumber)?.items[Number(index)];
 }
 
+function findPlaceInCity(name) {
+  for (const day of cityDays(state.cityId)) {
+    const place = day.items.find((item) => item.name === name);
+    if (place) return placeWithDay(place, day.number);
+  }
+  return null;
+}
+
+function updateSearchStatus(message) {
+  state.placeSearchStatus = message;
+  const status = document.querySelector('.search-status');
+  if (status) status.textContent = message;
+}
+
+async function searchPlaces(query) {
+  const keyword = query.trim();
+  state.placeSearchQuery = query;
+  state.selectedSearchResult = null;
+  if (keyword.length < 2) {
+    state.placeSearchResults = [];
+    updateSearchStatus('再输入一点关键词');
+    return;
+  }
+
+  searchController?.abort();
+  searchController = new AbortController();
+  const normalizedKeyword = keyword.toLocaleLowerCase().replace(/\s+/g, '');
+  const localResults = [];
+  const seenLocal = new Set();
+  days.forEach((day) => day.items.forEach((item) => {
+    const searchableName = `${item.name}${item.shortName || ''}`.toLocaleLowerCase().replace(/\s+/g, '');
+    const key = `${item.name}-${item.coords?.join(',')}`;
+    if (searchableName.includes(normalizedKeyword) && !seenLocal.has(key)) {
+      seenLocal.add(key);
+      localResults.push({ name: item.name, address: `喵游地点库 · D${day.number} ${day.label}${item.note ? ` · ${item.note}` : ''}`, coords: item.coords.map(Number) });
+    }
+  }));
+  state.placeSearchResults = localResults.slice(0, 4);
+  state.placeSearchStatus = localResults.length ? '已从行程地点库匹配，正在查找更多…' : '正在匹配地点…';
+  render();
+  try {
+    const params = new URLSearchParams({ format: 'jsonv2', limit: '6', 'accept-language': 'zh-CN', countrycodes: 'it,fr,es', q: keyword });
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?${params}`, { signal: searchController.signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const results = await response.json();
+    const onlineResults = results.map((result) => ({
+      name: result.name || result.display_name.split(',')[0],
+      address: result.display_name,
+      coords: [Number(result.lat), Number(result.lon)]
+    }));
+    const merged = [...localResults, ...onlineResults].filter((result, index, array) => array.findIndex((item) => item.coords.join(',') === result.coords.join(',')) === index);
+    state.placeSearchResults = merged.slice(0, 6);
+    state.placeSearchStatus = state.placeSearchResults.length ? `找到 ${state.placeSearchResults.length} 个地点` : '没有找到，试试更完整的名称';
+    render();
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+    state.placeSearchResults = [];
+    state.placeSearchStatus = '地点搜索暂时不可用，可切换到“手动添加”';
+    render();
+  }
+}
+
+function addPlaceFromForm(formElement) {
+  const form = new FormData(formElement);
+  const targetDay = getDay(state.addDayNumber);
+  if (!targetDay) return;
+  const manual = formElement.dataset.manual === 'true';
+  const coords = manual
+    ? state.manualMapCenter || cityById(state.cityId).center
+    : state.selectedSearchResult?.coords;
+  if (!coords) return;
+  const name = String(form.get('placeName')).trim();
+  targetDay.items.push({
+    id: `user-place-${Date.now()}`,
+    name,
+    shortName: name,
+    type: form.get('type'),
+    coords: coords.map(Number),
+    time: form.get('time'),
+    note: String(form.get('note') || '').trim(),
+    userAdded: true
+  });
+  persistItinerary();
+  state.dayFilter = String(targetDay.number);
+  state.category = 'all';
+  resetAddPlace();
+  render();
+}
+
+function moveSelectedPlace(targetDayNumber) {
+  const place = state.selectedPlace;
+  const sourceDay = getDay(place?._dayNumber);
+  const targetDay = getDay(targetDayNumber);
+  if (!place || !sourceDay || !targetDay || sourceDay.number === targetDay.number) return;
+  const index = sourceDay.items.findIndex((item) => item.id === place.id || (item.name === place.name && item.coords?.join(',') === place.coords?.join(',')));
+  if (index < 0) return;
+  const [movedPlace] = sourceDay.items.splice(index, 1);
+  targetDay.items.push(movedPlace);
+  persistItinerary();
+  state.dayFilter = String(targetDay.number);
+  state.selectedPlace = placeWithDay(movedPlace, targetDay.number);
+  render();
+}
+
 function bindEvents() {
   document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => {
     state.tab = button.dataset.tab;
@@ -335,15 +523,51 @@ function bindEvents() {
   document.querySelector('#city-select')?.addEventListener('change', (event) => { state.cityId = event.target.value; state.dayFilter = 'all'; render(); });
   document.querySelector('#day-filter')?.addEventListener('change', (event) => { state.dayFilter = event.target.value; render(); });
   document.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => { state.category = button.dataset.category; render(); }));
-  document.querySelectorAll('[data-place-day]').forEach((button) => button.addEventListener('click', () => { state.selectedPlace = resolvePlace(button.dataset.placeDay, button.dataset.placeIndex); render(); }));
+  document.querySelectorAll('[data-place-day]').forEach((button) => button.addEventListener('click', () => { state.selectedPlace = placeWithDay(resolvePlace(button.dataset.placeDay, button.dataset.placeIndex), button.dataset.placeDay); render(); }));
   document.querySelectorAll('[data-open-trip]').forEach((button) => button.addEventListener('click', () => { state.tab = 'trip'; state.cityId = button.dataset.openTrip; state.dayFilter = button.dataset.day || 'all'; location.hash = 'trip'; render(); }));
   document.querySelectorAll('[data-open-tickets]').forEach((button) => button.addEventListener('click', () => { state.showTickets = true; render(); }));
-  document.querySelectorAll('[data-close-overlay]').forEach((button) => button.addEventListener('click', () => { state.selectedPlace = null; state.showTickets = false; state.showExpenseForm = false; render(); }));
+  document.querySelectorAll('[data-close-overlay]').forEach((button) => button.addEventListener('click', () => {
+    state.selectedPlace = null;
+    state.showTickets = false;
+    state.showExpenseForm = false;
+    searchController?.abort();
+    resetAddPlace();
+    render();
+  }));
   document.querySelectorAll('[data-toggle-sheet]').forEach((button) => button.addEventListener('click', () => { state.sheetExpanded = !state.sheetExpanded; render(); }));
   document.querySelectorAll('[data-flow-place]').forEach((button) => button.addEventListener('click', () => {
-    const item = cityDays(state.cityId).flatMap((day) => day.items).find((place) => place.name === button.dataset.flowPlace);
-    state.selectedPlace = item; render();
+    state.selectedPlace = findPlaceInCity(button.dataset.flowPlace); render();
   }));
+  document.querySelectorAll('[data-add-place]').forEach((button) => button.addEventListener('click', () => {
+    const localDays = cityDays(state.cityId);
+    const center = map?.getCenter();
+    state.manualMapCenter = center ? [center.lat, center.lng] : cityById(state.cityId).center;
+    state.addDayNumber = state.dayFilter === 'all' ? localDays[0].number : Number(state.dayFilter);
+    state.addPlaceMode = 'search';
+    state.showAddPlace = true;
+    render();
+  }));
+  document.querySelectorAll('[data-add-mode]').forEach((button) => button.addEventListener('click', () => {
+    state.addPlaceMode = button.dataset.addMode;
+    state.selectedSearchResult = null;
+    state.placeSearchResults = [];
+    state.placeSearchStatus = '';
+    render();
+  }));
+  document.querySelector('#add-place-day')?.addEventListener('change', (event) => { state.addDayNumber = Number(event.target.value); render(); });
+  document.querySelector('#place-search-input')?.addEventListener('input', (event) => {
+    state.placeSearchQuery = event.target.value;
+    clearTimeout(searchTimer);
+    updateSearchStatus(event.target.value.trim().length < 2 ? '再输入一点关键词' : '等待搜索…');
+    searchTimer = setTimeout(() => searchPlaces(event.target.value), 850);
+  });
+  document.querySelectorAll('[data-place-result]').forEach((button) => button.addEventListener('click', () => {
+    state.selectedSearchResult = state.placeSearchResults[Number(button.dataset.placeResult)];
+    state.placeSearchStatus = '';
+    render();
+  }));
+  document.querySelector('#add-place-form')?.addEventListener('submit', (event) => { event.preventDefault(); addPlaceFromForm(event.currentTarget); });
+  document.querySelector('#move-place-day')?.addEventListener('change', (event) => moveSelectedPlace(Number(event.target.value)));
   document.querySelectorAll('[data-add-expense]').forEach((button) => button.addEventListener('click', () => { state.showExpenseForm = true; render(); }));
   document.querySelector('#expense-form')?.addEventListener('submit', (event) => {
     event.preventDefault();
