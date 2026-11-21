@@ -2,11 +2,32 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './styles.css';
 import { categories, days, expenseSeed, trip, typeLabels } from './data/trip.js';
+import catReminder from './assets/visual/mascots/cat-reminder.png';
+import catTraveler from './assets/visual/mascots/cat-traveler-map.png';
+import catExpenses from './assets/visual/mascots/cat-expenses.png';
+import catCamera from './assets/visual/mascots/cat-camera.png';
+import catSuitcase from './assets/visual/mascots/cat-suitcase.png';
+import iconTicket from './assets/visual/icons/utility/ticket.svg';
+import iconMap from './assets/visual/icons/utility/map.svg';
+import iconWallet from './assets/visual/icons/utility/wallet.svg';
+import iconScenic from './assets/visual/icons/places/scenic.svg';
+import iconFood from './assets/visual/icons/places/food.svg';
+import iconShopping from './assets/visual/icons/places/shopping.svg';
+import iconHotel from './assets/visual/icons/places/hotel.svg';
+import iconTransport from './assets/visual/icons/places/transport.svg';
+import pinOne from './assets/visual/pins/pin-1-coral.svg';
+import pinTwo from './assets/visual/pins/pin-2-blue.svg';
+import pinThree from './assets/visual/pins/pin-3-ochre.svg';
+import pinHotel from './assets/visual/pins/pin-hotel.svg';
+import pinTransport from './assets/visual/pins/pin-transport.svg';
 
 const app = document.querySelector('#app');
 const money = new Intl.NumberFormat('zh-CN', { maximumFractionDigits: 0 });
 const dayColors = ['#c86b4a', '#d99a51', '#c9a43d', '#789a78', '#5f948f'];
 const typeIcons = { sight: '📍', food: '🍴', shopping: '🛍', hotel: 'M', transport: '✈' };
+const tabCats = { today: catReminder, trip: catTraveler, expenses: catExpenses };
+const placeIcons = { all: iconScenic, sight: iconScenic, food: iconFood, shopping: iconShopping, hotel: iconHotel, transport: iconTransport };
+const numberedPins = [pinOne, pinTwo, pinThree];
 
 const savedExpenses = JSON.parse(localStorage.getItem('miaoyou-expenses') || 'null');
 const state = {
@@ -45,10 +66,6 @@ function googleMapsUrl(place) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${place.name} ${place.coords.join(',')}`)}`;
 }
 
-function tabIcon(id) {
-  return { today: '⌖', trip: '▣', expenses: '◒' }[id];
-}
-
 function shell(content) {
   return `
     <div class="paper-noise"></div>
@@ -60,7 +77,7 @@ function shell(content) {
         ['today', '今日'], ['trip', '行程'], ['expenses', '花费']
       ].map(([id, label]) => `
         <button class="nav-item ${state.tab === id ? 'active' : ''}" data-tab="${id}">
-          <span class="nav-icon">${tabIcon(id)}</span><span>${label}</span>
+          <img class="nav-cat" src="${tabCats[id]}" alt="" /><span>${label}</span>
         </button>`).join('')}
     </nav>
     ${state.selectedPlace ? placeDrawer(state.selectedPlace) : ''}
@@ -85,25 +102,32 @@ function todayView() {
   const day = getDay(state.todayDay);
   const city = cityById(day.cityId);
   const ticketCount = day.items.filter((item) => item.ticket).length;
+  const nextItem = day.items[0];
   return shell(`
     ${brandHeader({
       eyebrow: `${trip.subtitle} · ${trip.startDate.slice(0, 4)}`,
-      title: '今日',
+      title: '今日行程',
       action: `<label class="date-switch"><span>切换日期</span><select id="today-day-select">${days.map((d) => `<option value="${d.number}" ${d.number === day.number ? 'selected' : ''}>D${d.number} · ${d.label.split(' · ')[0]}</option>`).join('')}</select></label>`
     })}
     <section class="today-hero" style="--city-color:${city.color}">
-      <div class="postcard-stamp">D${day.number}</div>
+      <img class="hero-cat" src="${catTraveler}" alt="背着背包看地图的喵游猫" />
       <p class="today-date">${fmtDate(day.date)} · ${city.name}</p>
-      <h2>${day.icon} ${day.title}</h2>
-      <p class="weather-line">${day.weather}</p>
-      <div class="quick-grid">
-        <button class="quick-card" data-open-tickets><span>🎫</span><strong>${ticketCount} 张</strong><small>今日票券</small></button>
-        <button class="quick-card" data-open-trip="${day.cityId}" data-day="${day.number}"><span>🗺</span><strong>${day.items.length} 站</strong><small>打开地图</small></button>
-        <div class="quick-card"><span>🚐</span><strong>已安排</strong><small>${day.transit}</small></div>
-      </div>
+      <h2><span class="marker-swash">欧洲大冒险</span></h2>
+      <div class="city-trail">${trip.cities.map((item) => `<span class="${item.id === city.id ? 'current' : ''}">${item.name}</span>`).join('<i>→</i>')}</div>
+      <div class="day-highlight"><span>D${day.number}</span><div><strong>${day.icon} ${day.title}</strong><small>${day.weather}</small></div></div>
+    </section>
+    <section class="reminder-card">
+      <img class="reminder-cat" src="${catReminder}" alt="提醒猫" />
+      <div><span class="kicker">NEXT REMINDER</span><h3>${nextItem.time} · ${nextItem.shortName}</h3><p>${nextItem.note || day.transit}</p></div>
+      <span class="reminder-bell">🔔</span>
+    </section>
+    <section class="trip-glance">
+      <button class="glance-card ticket-glance" data-open-tickets><img src="${iconTicket}" alt="" /><div><small>今日票券</small><strong>${ticketCount} 张</strong></div></button>
+      <button class="glance-card map-glance" data-open-trip="${day.cityId}" data-day="${day.number}"><img src="${iconMap}" alt="" /><div><small>今日路线</small><strong>${day.items.length} 站</strong></div></button>
+      <div class="glance-card budget-glance"><img src="${iconWallet}" alt="" /><div><small>旅行预算</small><strong>€5,200</strong></div><i><b></b></i></div>
     </section>
     <section class="section-card today-map-card">
-      <div class="section-title"><div><span class="kicker">TODAY MAP</span><h3>${city.name} · 今日路线</h3></div><button class="text-button" data-open-trip="${day.cityId}" data-day="${day.number}">查看全图 →</button></div>
+      <div class="section-title"><div><span class="kicker">TODAY MAP</span><h3>${city.name} · 今日路线</h3></div><button class="text-button" data-open-trip="${day.cityId}" data-day="${day.number}">查看全图</button></div>
       <div id="today-map" class="map map-mini"></div>
     </section>
     <section class="section-card route-card">
@@ -137,17 +161,17 @@ function tripView() {
           <span class="back-doodle">‹</span>
           <label><span class="sr-only">选择城市</span><select id="city-select">${trip.cities.map((c) => `<option value="${c.id}" ${c.id === city.id ? 'selected' : ''}>${c.name} · ${cityDays(c.id).length}天</option>`).join('')}</select></label>
         </div>
-        <label class="day-dropdown"><span class="sr-only">选择日期</span><select id="day-filter"><option value="all">全部日期</option>${localDays.map((d, i) => `<option value="${d.number}" ${String(d.number) === String(state.dayFilter) ? 'selected' : ''}>第 ${i + 1} 天 · ${d.label.split(' · ')[0]}</option>`).join('')}</select></label>
+        <div class="map-actions"><label class="day-dropdown"><span class="sr-only">选择日期</span><select id="day-filter"><option value="all">全部日期</option>${localDays.map((d, i) => `<option value="${d.number}" ${String(d.number) === String(state.dayFilter) ? 'selected' : ''}>第 ${i + 1} 天 · ${d.label.split(' · ')[0]}</option>`).join('')}</select></label><span class="mini-program-pill">•••　◉</span></div>
       </header>
       <div class="category-strip" aria-label="地点分类">
-        ${categories.map((category) => `<button class="category-chip ${state.category === category.id ? 'active' : ''}" data-category="${category.id}"><span>${category.icon}</span>${category.label}</button>`).join('')}
+        ${categories.map((category) => `<button class="category-chip ${state.category === category.id ? 'active' : ''}" data-category="${category.id}"><img src="${placeIcons[category.id]}" alt="" />${category.label}</button>`).join('')}
       </div>
       <div id="trip-map" class="map map-main"></div>
       <section class="route-sheet ${state.sheetExpanded ? 'expanded' : ''}">
         <button class="sheet-handle" data-toggle-sheet aria-label="展开或收起路线"><span></span></button>
         <div class="sheet-summary">
           <div><span class="kicker">${selectedDay ? `D${selectedDay.number} · ${selectedDay.label}` : city.dates}</span><h2>${selectedDay ? selectedDay.title : `${city.name}全段`}</h2></div>
-          <button class="text-button" data-toggle-sheet>${state.sheetExpanded ? '收起' : '查看路线'} ${state.sheetExpanded ? '↓' : '↑'}</button>
+          <button class="text-button" data-toggle-sheet>${state.sheetExpanded ? '收起' : '查看路线'}</button>
         </div>
         <div class="route-flow">
           ${shownStops.slice(0, state.sheetExpanded ? shownStops.length : 4).map((item, index) => `<button class="flow-stop" data-flow-place="${item.name}"><span class="flow-dot">${index + 1}</span><strong>${item.shortName}</strong><small>${item.time}</small></button>`).join('<span class="flow-arrow">→</span>')}
@@ -167,8 +191,9 @@ function expensesView() {
   }, {});
   const categoryIcons = { 住宿: '🛏', 门票: '🎫', 餐饮: '🍴', 交通: '🚐', 购物: '🛍', 其他: '✦' };
   return shell(`
-    ${brandHeader({ title: '花费', eyebrow: `${trip.name} · 共享账本`, action: '<button class="circle-action" data-add-expense aria-label="添加花费">＋</button>' })}
+    ${brandHeader({ title: '团体花费', eyebrow: `${trip.name} · 共享账本`, action: '<button class="circle-action" data-add-expense aria-label="添加花费">＋</button>' })}
     <section class="expense-hero">
+      <img class="expense-cat" src="${catExpenses}" alt="拿着计算器的喵游猫" />
       <span class="kicker">TRIP TOTAL · USD EST.</span>
       <div class="total-amount"><small>$</small>${money.format(total)}</div>
       <p>共 ${state.expenses.length} 笔 · 汇率为规划估算</p>
@@ -194,12 +219,12 @@ function placeDrawer(place) {
     <div class="overlay" data-close-overlay></div>
     <aside class="place-drawer">
       <button class="drawer-close" data-close-overlay>×</button>
-      <div class="place-art ${place.type}"><span>${typeIcons[place.type]}</span><i></i><b></b></div>
+      <div class="place-art ${place.type}"><img class="place-type-icon" src="${placeIcons[place.type]}" alt="" /><img class="place-mascot" src="${catCamera}" alt="拿相机的喵游猫" /><i></i><b></b></div>
       <span class="kicker">${typeLabels[place.type] || place.type}</span>
       <h2>${place.name}</h2>
       <p>${place.note || '已加入这次旅行的地点清单。'}</p>
       <div class="detail-meta"><span>🕒 ${place.time}</span>${place.ticket ? `<span>🎫 ${place.ticket.label} · ${place.ticket.price}</span>` : ''}</div>
-      <a class="primary-button" href="${googleMapsUrl(place)}" target="_blank" rel="noreferrer">用 Google Maps 打开 ↗</a>
+      <a class="primary-button" href="${googleMapsUrl(place)}" target="_blank" rel="noreferrer">在 Google Maps 打开</a>
     </aside>`;
 }
 
@@ -211,7 +236,7 @@ function ticketWallet() {
     <aside class="full-panel">
       <header class="panel-header"><button data-close-overlay>‹</button><div><span class="kicker">TICKET WALLET</span><h2>今日票券</h2></div><span>${tickets.length} 张</span></header>
       <div class="ticket-stack">
-        ${tickets.length ? tickets.map((item, index) => `<article class="ticket-card ${item.ticket.status}"><div class="ticket-top"><span>${item.ticket.status === 'confirmed' ? '✓ READY' : 'TO BUY'}</span><small>D${day.number} · ${item.time}</small></div><h3>${item.shortName}</h3><p>${item.ticket.label} · ${item.ticket.price}</p><div class="fake-code">${Array.from({ length: 28 }, (_, i) => `<i style="height:${10 + (i * 7) % 22}px"></i>`).join('')}</div></article>`).join('') : '<div class="empty-state"><span>🐈</span><h3>今天没有需要出示的票</h3><p>轻装上阵，去散步吧。</p></div>'}
+        ${tickets.length ? tickets.map((item, index) => `<article class="ticket-card ${item.ticket.status}"><div class="ticket-top"><span>${item.ticket.status === 'confirmed' ? '✓ READY' : 'TO BUY'}</span><small>D${day.number} · ${item.time}</small></div><h3>${item.shortName}</h3><p>${item.ticket.label} · ${item.ticket.price}</p><div class="fake-code">${Array.from({ length: 28 }, (_, i) => `<i style="height:${10 + (i * 7) % 22}px"></i>`).join('')}</div></article>`).join('') : `<div class="empty-state"><img src="${catSuitcase}" alt="提着行李箱的喵游猫" /><h3>今天没有需要出示的票</h3><p>轻装上阵，去散步吧。</p></div>`}
       </div>
     </aside>`;
 }
@@ -233,11 +258,16 @@ function expenseForm() {
 }
 
 function createMarkerIcon(item, dayNumber, active) {
-  const color = active ? dayColors[(dayNumber - 1) % dayColors.length] : '#a9aaa6';
-  const label = item.type === 'hotel' ? 'M' : item.type === 'food' ? '🍴' : dayNumber;
+  const day = getDay(dayNumber);
+  const localNumber = cityDays(day.cityId).findIndex((itemDay) => itemDay.number === day.number) + 1;
+  const color = active ? dayColors[(localNumber - 1) % dayColors.length] : '#a9aaa6';
+  const asset = item.type === 'hotel' ? pinHotel : item.type === 'transport' ? pinTransport : numberedPins[localNumber - 1];
+  const marker = asset
+    ? `<img class="miaoyou-marker-asset ${active ? '' : 'muted'}" src="${asset}" alt="" />`
+    : `<div class="miaoyou-marker ${active ? '' : 'muted'}" style="--pin:${color}"><span>${localNumber}</span></div>`;
   return L.divIcon({
     className: 'miaoyou-marker-wrap',
-    html: `<div class="miaoyou-marker ${active ? '' : 'muted'}" style="--pin:${color}"><span>${label}</span></div><div class="marker-label">${item.shortName}</div>`,
+    html: `${marker}<div class="marker-label">${item.shortName}</div>`,
     iconAnchor: [18, 42]
   });
 }
