@@ -28,9 +28,10 @@ const typeIcons = { sight: '📍', food: '🍴', shopping: '🛍', hotel: 'M', t
 const tabCats = { today: catReminder, trip: catTraveler, expenses: catExpenses };
 const placeIcons = { all: iconScenic, sight: iconScenic, food: iconFood, shopping: iconShopping, hotel: iconHotel, transport: iconTransport };
 const numberedPins = [pinOne, pinTwo, pinThree];
+const itineraryStorageKey = 'miaoyou-itinerary-v2';
 
 const savedExpenses = JSON.parse(localStorage.getItem('miaoyou-expenses') || 'null');
-const savedItinerary = JSON.parse(localStorage.getItem('miaoyou-itinerary') || 'null');
+const savedItinerary = JSON.parse(localStorage.getItem(itineraryStorageKey) || 'null');
 if (savedItinerary) {
   days.forEach((day) => {
     if (Array.isArray(savedItinerary[day.number])) day.items = savedItinerary[day.number];
@@ -87,7 +88,7 @@ function escapeHtml(value = '') {
 }
 
 function persistItinerary() {
-  localStorage.setItem('miaoyou-itinerary', JSON.stringify(Object.fromEntries(days.map((day) => [day.number, day.items]))));
+  localStorage.setItem(itineraryStorageKey, JSON.stringify(Object.fromEntries(days.map((day) => [day.number, day.items]))));
 }
 
 function placeWithDay(place, dayNumber) {
